@@ -11,6 +11,7 @@ export type SessionUser = {
 export type ManagedUser = {
   id: string;
   suapEnrollment: string;
+  name: string | null;
   role: UserRole;
   status: boolean;
 };
@@ -47,6 +48,20 @@ export async function logout() {
   window.location.assign("/");
 }
 
+export async function listEnrollments() {
+  const response = await fetch("/api/users/list", { cache: "no-store" });
+  if (response.status === 401) {
+    window.location.assign("/");
+    throw new ApiError("Sessão encerrada.");
+  }
+  if (!response.ok) {
+    throw new ApiError(
+      await readMessage(response, "Não foi possível carregar as matrículas."),
+    );
+  }
+  return (await response.json()) as ManagedUser[];
+}
+
 export function authorizeEnrollment(suapEnrollment: string, role: UserRole) {
   return postJson<ManagedUser>(
     "/api/users/authorize",
@@ -63,7 +78,17 @@ export function updateEnrollmentStatus(suapEnrollment: string, status: boolean) 
   );
 }
 
-async function postJson<T>(path: string, body: unknown, fallback: string) {
+export async function getJson<T>(path: string, fallback: string) {
+  const response = await fetch(path, { cache: "no-store" });
+  if (response.status === 401) {
+    window.location.assign("/");
+    throw new ApiError("Sessão encerrada.");
+  }
+  if (!response.ok) throw new ApiError(await readMessage(response, fallback));
+  return (await response.json()) as T;
+}
+
+export async function postJson<T>(path: string, body: unknown, fallback: string) {
   const response = await fetch(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

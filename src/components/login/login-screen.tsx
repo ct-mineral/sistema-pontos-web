@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
+import { BrandMark } from "@/components/login/brand-mark";
 import { LoginHero } from "@/components/login/login-hero";
-import { LoginPanel } from "@/components/login/login-panel";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { API_ORIGIN, logout, ROLE_LABEL } from "@/lib/api";
 import { useSession } from "@/lib/use-session";
-import "@/styles/login.css";
 
 export function LoginScreen() {
   const router = useRouter();
@@ -14,22 +15,22 @@ export function LoginScreen() {
   const isStaff = user?.role === "SERVIDOR";
 
   useEffect(() => {
-    if (phase === "ready" && isStaff) router.replace("/admin");
+    if (phase === "ready" && isStaff) router.replace("/admin/matriculas");
   }, [isStaff, phase, router]);
 
   return (
-    <main className="login-screen">
-      <section className="login-screen__form">
+    <main className="flex min-h-dvh flex-col bg-background font-[family-name:var(--font-poppins)] text-foreground lg:h-dvh lg:flex-row lg:overflow-hidden">
+      <section className="flex min-h-dvh flex-1 items-center justify-center px-4 py-6 lg:min-h-0 lg:px-6">
         {phase === "loading" || isStaff ? (
-          <p className="login-footnote">Carregando sessão…</p>
+          <p className="text-sm text-muted-foreground">Carregando sessão…</p>
         ) : user ? (
           <LoginPanel
             title="Acesso restrito"
             description={`Somente servidores administram esta área. A matrícula ${user.suapEnrollment} entrou como ${ROLE_LABEL[user.role]}.`}
             action={
-              <button type="button" className="login-button" onClick={() => void logout()}>
+              <Button type="button" className="h-10 w-full" onClick={() => void logout()}>
                 Sair
-              </button>
+              </Button>
             }
           />
         ) : (
@@ -39,16 +40,55 @@ export function LoginScreen() {
             notice={error}
             footnote="O acesso depende de uma matrícula autorizada por um servidor."
             action={
-              <a className="login-button" href={`${API_ORIGIN}/api/auth/suap`}>
+              <Button
+                className="h-10 w-full"
+                nativeButton={false}
+                render={<a href={`${API_ORIGIN}/api/auth/suap`} />}
+              >
                 Entrar com SUAP
-              </a>
+              </Button>
             }
           />
         )}
       </section>
-      <aside className="login-screen__hero" aria-hidden="true">
+      <aside className="hidden lg:flex lg:h-dvh lg:w-1/2 lg:p-8" aria-hidden="true">
         <LoginHero />
       </aside>
     </main>
+  );
+}
+
+function LoginPanel({
+  title,
+  description,
+  notice,
+  action,
+  footnote,
+}: {
+  title: string;
+  description: string;
+  notice?: string | null;
+  action: ReactNode;
+  footnote?: string;
+}) {
+  return (
+    <section className="flex w-full max-w-lg flex-col gap-6">
+      <div className="flex flex-col gap-4">
+        <BrandMark />
+        <div className="space-y-1">
+          <h1 className="text-2xl font-medium tracking-tight">{title}</h1>
+          <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <div className="flex flex-col gap-4">
+        {notice ? (
+          <Alert variant="destructive">
+            <AlertDescription>{notice}</AlertDescription>
+          </Alert>
+        ) : null}
+        {action}
+        {footnote ? <p className="text-sm leading-relaxed text-muted-foreground">{footnote}</p> : null}
+      </div>
+    </section>
   );
 }
