@@ -45,3 +45,11 @@ export function periodError(from: string, to: string) {
 export function minutesLabel(value: number | null | undefined) {
   return value == null ? "não definido" : formatMinutes(value);
 }
+
+export function formatTime(value: string) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Fortaleza",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}

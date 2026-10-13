@@ -36,11 +36,17 @@ export type WorkloadAdjustment = {
   endDate: string | null;
 };
 
+export type DayActivity = {
+  recordedAt: string;
+  description: string | null;
+};
+
 export type DaySummary = {
   date: string;
   workedMinutes: number;
   expectedMinutes: number | null;
   remainingMinutes: number | null;
+  activities: DayActivity[];
 };
 
 export type PeriodSummary = {

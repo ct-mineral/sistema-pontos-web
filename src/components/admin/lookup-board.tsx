@@ -1,9 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { AdminPage, Field, Notice, Toolbar } from "@/components/admin/page-frame";
-import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AdminPage,
+  Field,
+  Notice,
+  Toolbar,
+} from "@/components/admin/page-frame";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -16,11 +34,18 @@ import {
 import {
   fetchPeriodByEnrollment,
   fetchSummaryByEnrollment,
+  type DayActivity,
   type DaySummary,
   type PeriodSummary,
 } from "@/lib/admin-api";
 import { ApiError } from "@/lib/api";
-import { formatDay, fortalezaToday, minutesLabel, periodError } from "@/lib/schedule";
+import {
+  formatDay,
+  formatTime,
+  fortalezaToday,
+  minutesLabel,
+  periodError,
+} from "@/lib/schedule";
 
 export function LookupBoard() {
   const today = fortalezaToday();
@@ -47,7 +72,11 @@ export function LookupBoard() {
       setQueried(suapEnrollment);
     } catch (caught) {
       setSummary(null);
-      setNotice(caught instanceof ApiError ? caught.message : "Não foi possível consultar o dia.");
+      setNotice(
+        caught instanceof ApiError
+          ? caught.message
+          : "Não foi possível consultar o dia.",
+      );
     } finally {
       setLoading(false);
     }
@@ -72,13 +101,18 @@ export function LookupBoard() {
       setQueried(suapEnrollment);
     } catch (caught) {
       setPeriod(null);
-      setNotice(caught instanceof ApiError ? caught.message : "Não foi possível consultar o período.");
+      setNotice(
+        caught instanceof ApiError
+          ? caught.message
+          : "Não foi possível consultar o período.",
+      );
     } finally {
       setLoading(false);
     }
   }
 
   const totals = summary ?? period;
+  const days = summary ? [summary] : (period?.days ?? []);
 
   return (
     <AdminPage
@@ -102,15 +136,30 @@ export function LookupBoard() {
             />
           </Field>
           <Field label="De" htmlFor="lookup-from">
-            <Input id="lookup-from" type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
+            <Input
+              id="lookup-from"
+              type="date"
+              value={from}
+              onChange={(event) => setFrom(event.target.value)}
+            />
           </Field>
           <Field label="Até" htmlFor="lookup-to">
-            <Input id="lookup-to" type="date" value={to} onChange={(event) => setTo(event.target.value)} />
+            <Input
+              id="lookup-to"
+              type="date"
+              value={to}
+              onChange={(event) => setTo(event.target.value)}
+            />
           </Field>
           <Button type="submit" disabled={loading}>
             Consultar hoje
           </Button>
-          <Button type="button" variant="outline" disabled={loading} onClick={() => void loadPeriod()}>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={loading}
+            onClick={() => void loadPeriod()}
+          >
             Aplicar período
           </Button>
         </Toolbar>
@@ -124,12 +173,21 @@ export function LookupBoard() {
       ) : null}
       {totals ? (
         <div className="grid gap-3 sm:grid-cols-3">
-          <Metric label="Trabalhado" value={minutesLabel(totals.workedMinutes)} />
-          <Metric label="Previsto" value={minutesLabel(totals.expectedMinutes)} />
-          <Metric label="Restante" value={minutesLabel(totals.remainingMinutes)} />
+          <Metric
+            label="Trabalhado"
+            value={minutesLabel(totals.workedMinutes)}
+          />
+          <Metric
+            label="Previsto"
+            value={minutesLabel(totals.expectedMinutes)}
+          />
+          <Metric
+            label="Restante"
+            value={minutesLabel(totals.remainingMinutes)}
+          />
         </div>
       ) : null}
-      {period ? (
+      {queried && days.length > 0 ? (
         <Table>
           <TableHeader>
             <TableRow>
@@ -140,12 +198,19 @@ export function LookupBoard() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {period.days.map((day) => (
+            {days.map((day) => (
               <TableRow key={day.date}>
                 <TableCell className="font-medium">{formatDay(day.date)}</TableCell>
                 <TableCell>{minutesLabel(day.workedMinutes)}</TableCell>
                 <TableCell>{minutesLabel(day.expectedMinutes)}</TableCell>
                 <TableCell>{minutesLabel(day.remainingMinutes)}</TableCell>
+                <TableCell>
+                  <DayDescriptions
+                    enrollment={queried}
+                    date={formatDay(day.date)}
+                    activities={day.activities ?? []}
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -164,6 +229,57 @@ function Metric({ label, value }: { label: string; value: string }) {
       </CardHeader>
     </Card>
   );
+}
+
+function DayDescriptions({
+  enrollment,
+  date,
+  activities,
+}: {
+  enrollment: string;
+  date: string;
+  activities: DayActivity[];
+}) {
+  return (
+    <Dialog>
+      <DialogTrigger
+        className={buttonVariants({ variant: "outline", size: "sm" })}
+      >
+        Ver descrições
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Descrições de {date}</DialogTitle>
+          <DialogDescription>
+            Textos informados na saída da matrícula {enrollment}.
+          </DialogDescription>
+        </DialogHeader>
+        {activities.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Nenhuma saída registrada neste dia.
+          </p>
+        ) : (
+          <ul className="max-h-80 space-y-3 overflow-y-auto">
+            {activities.map((activity) => (
+              <li key={activity.recordedAt}>
+                <p className="text-xs text-muted-foreground">
+                  {formatTime(activity.recordedAt)}
+                </p>
+                <p className="whitespace-pre-wrap">
+                  {activityText(activity.description)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function activityText(description: string | null) {
+  const text = description?.trim();
+  return text ? text : "Sem descrição";
 }
 
 function shiftDay(day: string, amount: number) {
