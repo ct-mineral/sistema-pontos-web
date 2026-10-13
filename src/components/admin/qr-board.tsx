@@ -3,7 +3,16 @@
 import { useEffect, useState } from "react";
 import { QrImage } from "@/components/admin/qr-image";
 import { AdminPage, EmptyRow, Field, Notice, StatusBadge, Toolbar } from "@/components/admin/page-frame";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -118,7 +127,7 @@ export function QrBoard() {
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.location}</TableCell>
                 <TableCell>
-                  <QrImage value={item.id} />
+                  <QrPreview item={item} />
                 </TableCell>
                 <TableCell>
                   <StatusBadge active={item.status} />
@@ -141,6 +150,65 @@ export function QrBoard() {
       </Table>
     </AdminPage>
   );
+}
+
+function QrPreview({ item }: { item: QrCode }) {
+  const [open, setOpen] = useState(false);
+  const [src, setSrc] = useState<string | null>(null);
+
+  function download() {
+    if (!src) return;
+    const link = document.createElement("a");
+    link.href = src;
+    link.download = qrFileName(item.location);
+    link.click();
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) setSrc(null);
+      }}
+    >
+      <DialogTrigger className={buttonVariants({ variant: "outline", size: "sm" })}>
+        Ver código
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{item.location}</DialogTitle>
+          <DialogDescription>Escaneie este código para registrar o ponto neste local.</DialogDescription>
+        </DialogHeader>
+        <div className="flex justify-center">
+          {open ? (
+            <QrImage
+              value={item.id}
+              size={512}
+              alt={`QR code de ${item.location}`}
+              className="size-64"
+              onReady={setSrc}
+            />
+          ) : null}
+        </div>
+        <DialogFooter>
+          <Button type="button" onClick={download} disabled={!src}>
+            Baixar imagem
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function qrFileName(location: string) {
+  const slug = location
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `qr-${slug || "codigo"}.png`;
 }
 
 function messageOf(caught: unknown, fallback: string) {
