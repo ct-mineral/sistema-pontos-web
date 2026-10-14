@@ -138,9 +138,9 @@ export function QrBoard() {
       >
         <Toolbar>
           <Field label="Local" htmlFor="qr-location">
-            <Input id="qr-location" value={location} onChange={(event) => setLocation(event.target.value)} />
+            <Input className="rounded-sm w-2xs" id="qr-location" value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Informe o local que do QR Code" />
           </Field>
-          <Button type="submit" disabled={busy}>
+          <Button className="rounded-sm" type="submit" disabled={busy}>
             Cadastrar
           </Button>
         </Toolbar>
@@ -173,6 +173,7 @@ export function QrBoard() {
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button
+                      className="rounded-sm"
                       type="button"
                       size="sm"
                       variant={item.status ? "outline" : "default"}
@@ -182,6 +183,7 @@ export function QrBoard() {
                       {item.status ? "Desativar" : "Ativar"}
                     </Button>
                     <Button
+                      className="rounded-sm"
                       type="button"
                       size="sm"
                       variant="outline"
@@ -191,6 +193,7 @@ export function QrBoard() {
                       Editar
                     </Button>
                     <Button
+                      className="rounded-sm"
                       type="button"
                       size="sm"
                       variant="destructive"
@@ -332,7 +335,7 @@ function QrPreview({ item }: { item: QrCode }) {
           ) : null}
         </div>
         <DialogFooter>
-          <Button type="button" onClick={download} disabled={!src}>
+          <Button className="rounded-sm px-2" type="button" onClick={download} disabled={!src}>
             Baixar imagem
           </Button>
         </DialogFooter>

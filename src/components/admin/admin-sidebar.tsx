@@ -23,7 +23,7 @@ import {
 export const ADMIN_ROUTES: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin/matriculas", label: "Matrículas", icon: IdCard },
   { href: "/admin/grupos", label: "Grupos", icon: Users },
-  { href: "/admin/qr-codes", label: "QR codes", icon: QrCode },
+  { href: "/admin/qr-codes", label: "QR Codes", icon: QrCode },
   { href: "/admin/ajustes", label: "Ajustes de carga", icon: SlidersHorizontal },
   { href: "/admin/consulta", label: "Consultar matrícula", icon: Search },
 ];
@@ -47,8 +47,9 @@ export function AdminSidebar({ user }: { user: SessionUser }) {
               {ADMIN_ROUTES.map((route) => {
                 const Icon = route.icon;
                 return (
-                  <SidebarMenuItem key={route.href}>
+                  <SidebarMenuItem key={route.href} className="py-1">
                     <SidebarMenuButton
+                      className="rounded-sm"
                       isActive={pathname === route.href}
                       tooltip={route.label}
                       render={<Link href={route.href} />}

@@ -154,6 +154,7 @@ export function GroupsBoard() {
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button
+                      className="rounded-sm px-2"
                       type="button"
                       size="sm"
                       variant={group.status ? "outline" : "default"}
@@ -162,10 +163,11 @@ export function GroupsBoard() {
                     >
                       {group.status ? "Desativar" : "Ativar"}
                     </Button>
-                    <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setEditing(group)}>
+                    <Button className="rounded-sm px-2" type="button" size="sm" variant="outline" disabled={busy} onClick={() => setEditing(group)}>
                       Editar
                     </Button>
                     <Button
+                      className="rounded-sm px-2"
                       type="button"
                       size="sm"
                       variant="destructive"
@@ -289,10 +291,10 @@ function EditGroupDialog({
           </Field>
           {formError ? <Notice tone="error">{formError}</Notice> : null}
           <DialogFooter>
-            <Button type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
+            <Button className="rounded-sm px-2" type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={busy}>
+            <Button className="rounded-sm" type="submit" disabled={busy}>
               Salvar
             </Button>
           </DialogFooter>
@@ -333,15 +335,15 @@ function CreateGroupForm({
     >
       <Toolbar>
         <Field label="Nome" htmlFor="group-name">
-          <Input id="group-name" value={name} onChange={(event) => setName(event.target.value)} />
+          <Input className="rounded-sm" id="group-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Informe o nome do grupo" />
         </Field>
         <Field label="Entrada" htmlFor="group-start">
-          <Input id="group-start" type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
+          <Input className="rounded-sm" id="group-start" type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
         </Field>
         <Field label="Saída" htmlFor="group-end">
-          <Input id="group-end" type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
+          <Input className="rounded-sm" id="group-end" type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
         </Field>
-        <Button type="submit" disabled={busy}>
+        <Button className="rounded-sm" type="submit" disabled={busy}>
           Cadastrar grupo
         </Button>
       </Toolbar>
@@ -384,16 +386,18 @@ function MembershipForm({
       <Toolbar>
         <Field label="Matrícula" htmlFor="group-enrollment">
           <Input
+            className="rounded-sm w-2xs"
             id="group-enrollment"
             value={enrollment}
             onChange={(event) => setEnrollment(event.target.value)}
             autoCapitalize="none"
             autoCorrect="off"
+            placeholder="Informe a matrícula do usuário"
           />
         </Field>
         <Field label="Grupo ativo" htmlFor="group-choice">
           <Select value={groupId || null} onValueChange={(value) => setGroupId(value ?? "")}>
-            <SelectTrigger id="group-choice" className="w-52">
+            <SelectTrigger className="rounded-sm w-52" id="group-choice">
               <SelectValue placeholder="Selecione" />
             </SelectTrigger>
             <SelectContent>
@@ -405,10 +409,10 @@ function MembershipForm({
             </SelectContent>
           </Select>
         </Field>
-        <Button type="submit" disabled={busy}>
+        <Button className="rounded-sm" type="submit" disabled={busy}>
           Vincular
         </Button>
-        <Button type="button" variant="outline" disabled={busy} onClick={() => void submit("unassign")}>
+        <Button className="rounded-sm px-2" type="button" variant="outline" disabled={busy} onClick={() => void submit("unassign")}>
           Remover do grupo
         </Button>
       </Toolbar>

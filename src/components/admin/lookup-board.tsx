@@ -128,6 +128,7 @@ export function LookupBoard() {
         <Toolbar>
           <Field label="Matrícula" htmlFor="lookup-enrollment">
             <Input
+              className="rounded-sm"
               id="lookup-enrollment"
               value={enrollment}
               onChange={(event) => setEnrollment(event.target.value)}
@@ -137,6 +138,7 @@ export function LookupBoard() {
           </Field>
           <Field label="De" htmlFor="lookup-from">
             <Input
+              className="rounded-sm"
               id="lookup-from"
               type="date"
               value={from}
@@ -145,16 +147,18 @@ export function LookupBoard() {
           </Field>
           <Field label="Até" htmlFor="lookup-to">
             <Input
+              className="rounded-sm"
               id="lookup-to"
               type="date"
               value={to}
               onChange={(event) => setTo(event.target.value)}
             />
           </Field>
-          <Button type="submit" disabled={loading}>
+          <Button className="rounded-sm" type="submit" disabled={loading}>
             Consultar hoje
           </Button>
           <Button
+            className="rounded-sm px-2"
             type="button"
             variant="outline"
             disabled={loading}

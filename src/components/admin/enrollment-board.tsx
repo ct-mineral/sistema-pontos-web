@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
-import { AdminPage, EmptyRow, Field, Notice, StatusBadge, Toolbar } from "@/components/admin/page-frame";
+import {
+  AdminPage,
+  EmptyRow,
+  Field,
+  Notice,
+  StatusBadge,
+  Toolbar,
+} from "@/components/admin/page-frame";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -65,7 +72,9 @@ export function EnrollmentBoard() {
     setLoadError(null);
     try {
       const next = await updateEnrollmentStatus(user.suapEnrollment, status);
-      setUsers((current) => current.map((item) => (item.id === next.id ? next : item)));
+      setUsers((current) =>
+        current.map((item) => (item.id === next.id ? next : item)),
+      );
     } catch (caught) {
       setLoadError(messageOf(caught));
     } finally {
@@ -95,7 +104,10 @@ export function EnrollmentBoard() {
     >
       <AuthorizeForm
         onCreated={(created) =>
-          setUsers((current) => [created, ...current.filter((item) => item.id !== created.id)])
+          setUsers((current) => [
+            created,
+            ...current.filter((item) => item.id !== created.id),
+          ])
         }
       />
       {loadError ? <Notice tone="error">{loadError}</Notice> : null}
@@ -117,7 +129,9 @@ export function EnrollmentBoard() {
           ) : (
             users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.suapEnrollment}</TableCell>
+                <TableCell className="font-medium">
+                  {user.suapEnrollment}
+                </TableCell>
                 <TableCell>{user.name?.trim() || "—"}</TableCell>
                 <TableCell>{labelOf(user.role)}</TableCell>
                 <TableCell>
@@ -126,6 +140,7 @@ export function EnrollmentBoard() {
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button
+                      className="rounded-sm px-2"
                       type="button"
                       size="sm"
                       variant={user.status ? "outline" : "default"}
@@ -135,6 +150,7 @@ export function EnrollmentBoard() {
                       {user.status ? "Desativar" : "Ativar"}
                     </Button>
                     <Button
+                      className="rounded-sm px-2"
                       type="button"
                       size="sm"
                       variant="outline"
@@ -145,6 +161,7 @@ export function EnrollmentBoard() {
                     </Button>
                     {session?.id === user.id ? null : (
                       <Button
+                        className="rounded-sm px-2"
                         type="button"
                         size="sm"
                         variant="destructive"
@@ -173,7 +190,9 @@ export function EnrollmentBoard() {
             setPendingId(editing.id);
             try {
               const next = await updateEnrollment(editing.id, suapEnrollment);
-              setUsers((current) => current.map((item) => (item.id === next.id ? next : item)));
+              setUsers((current) =>
+                current.map((item) => (item.id === next.id ? next : item)),
+              );
               setEditing(null);
             } finally {
               setPendingId(null);
@@ -201,7 +220,11 @@ export function EnrollmentBoard() {
   );
 }
 
-function AuthorizeForm({ onCreated }: { onCreated: (user: ManagedUser) => void }) {
+function AuthorizeForm({
+  onCreated,
+}: {
+  onCreated: (user: ManagedUser) => void;
+}) {
   const [enrollment, setEnrollment] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<NoticeState | null>(null);
@@ -242,13 +265,15 @@ function AuthorizeForm({ onCreated }: { onCreated: (user: ManagedUser) => void }
         <Field label="Matrícula" htmlFor="authorize-enrollment">
           <Input
             id="authorize-enrollment"
+            className="rounded-sm w-2xs"
             value={enrollment}
             onChange={(event) => setEnrollment(event.target.value)}
             autoCapitalize="none"
             autoCorrect="off"
+            placeholder="Informe a matrícula do usuário"
           />
         </Field>
-        <Button type="submit" disabled={busy}>
+        <Button className="rounded-sm" type="submit" disabled={busy}>
           Autorizar
         </Button>
       </Toolbar>
@@ -276,7 +301,9 @@ function EditEnrollmentDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Editar matrícula</DialogTitle>
-          <DialogDescription>O nome e o papel continuam vindo do SUAP.</DialogDescription>
+          <DialogDescription>
+            O nome e o papel continuam vindo do SUAP.
+          </DialogDescription>
         </DialogHeader>
         <form
           className="flex flex-col gap-3"
@@ -306,7 +333,12 @@ function EditEnrollmentDialog({
           </Field>
           {formError ? <Notice tone="error">{formError}</Notice> : null}
           <DialogFooter>
-            <Button type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={() => onOpenChange(false)}
+            >
               Cancelar
             </Button>
             <Button type="submit" disabled={busy}>
@@ -325,7 +357,9 @@ function labelOf(role: string | null) {
 }
 
 function messageOf(caught: unknown) {
-  return caught instanceof ApiError ? caught.message : "Não foi possível concluir a operação.";
+  return caught instanceof ApiError
+    ? caught.message
+    : "Não foi possível concluir a operação.";
 }
 
 type NoticeState = { tone: "ok" | "error"; text: string };

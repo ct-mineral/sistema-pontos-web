@@ -100,6 +100,7 @@ export function AdjustmentsBoard() {
         <Toolbar>
           <Field label="Filtrar matrícula" htmlFor="adjustment-filter">
             <Input
+              className="rounded-sm"
               id="adjustment-filter"
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
@@ -107,7 +108,7 @@ export function AdjustmentsBoard() {
               autoCorrect="off"
             />
           </Field>
-          <Button type="submit" disabled={loading}>
+          <Button className="rounded-sm" type="submit" disabled={loading}>
             Aplicar
           </Button>
         </Toolbar>
@@ -307,6 +308,7 @@ function EditAdjustmentDialog({
         >
           <Field label="Matrícula" htmlFor="edit-adjustment-enrollment">
             <Input
+              className="rounded-sm"
               id="edit-adjustment-enrollment"
               value={enrollment}
               onChange={(event) => setEnrollment(event.target.value)}
@@ -331,6 +333,7 @@ function EditAdjustmentDialog({
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Entrada" htmlFor="edit-adjustment-start">
               <Input
+                className="rounded-sm"
                 id="edit-adjustment-start"
                 type="time"
                 value={startTime}
@@ -339,6 +342,7 @@ function EditAdjustmentDialog({
             </Field>
             <Field label="Saída" htmlFor="edit-adjustment-end">
               <Input
+                className="rounded-sm"
                 id="edit-adjustment-end"
                 type="time"
                 value={endTime}
@@ -347,6 +351,7 @@ function EditAdjustmentDialog({
             </Field>
             <Field label="Início" htmlFor="edit-adjustment-from">
               <Input
+                className="rounded-sm"
                 id="edit-adjustment-from"
                 type="date"
                 value={startDate}
@@ -355,6 +360,7 @@ function EditAdjustmentDialog({
             </Field>
             <Field label="Fim" htmlFor="edit-adjustment-to">
               <Input
+                className="rounded-sm"
                 id="edit-adjustment-to"
                 type="date"
                 value={endDate}
@@ -364,10 +370,10 @@ function EditAdjustmentDialog({
           </div>
           {formError ? <Notice tone="error">{formError}</Notice> : null}
           <DialogFooter>
-            <Button type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
+            <Button className="rounded-sm px-2" type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={busy}>
+            <Button className="rounded-sm" type="submit" disabled={busy}>
               Salvar
             </Button>
           </DialogFooter>
@@ -436,16 +442,18 @@ function CreateAdjustmentForm({
       <Toolbar>
         <Field label="Matrícula" htmlFor="adjustment-enrollment">
           <Input
+            className="rounded-sm"
             id="adjustment-enrollment"
             value={enrollment}
             onChange={(event) => setEnrollment(event.target.value)}
             autoCapitalize="none"
             autoCorrect="off"
+            placeholder="Informe a matrícula"
           />
         </Field>
         <Field label="Grupo" htmlFor="adjustment-group">
           <Select value={groupId || null} onValueChange={(value) => setGroupId(value ?? "")}>
-            <SelectTrigger id="adjustment-group" className="w-52">
+            <SelectTrigger className="rounded-sm w-52" id="adjustment-group">
               <SelectValue placeholder="Selecione" />
             </SelectTrigger>
             <SelectContent>
@@ -459,6 +467,7 @@ function CreateAdjustmentForm({
         </Field>
         <Field label="Entrada" htmlFor="adjustment-start">
           <Input
+            className="rounded-sm"
             id="adjustment-start"
             type="time"
             value={startTime}
@@ -466,15 +475,15 @@ function CreateAdjustmentForm({
           />
         </Field>
         <Field label="Saída" htmlFor="adjustment-end">
-          <Input id="adjustment-end" type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
+          <Input className="rounded-sm" id="adjustment-end" type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
         </Field>
         <Field label="Início" htmlFor="adjustment-from">
-          <Input id="adjustment-from" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+          <Input className="rounded-sm" id="adjustment-from" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
         </Field>
         <Field label="Fim" htmlFor="adjustment-to">
-          <Input id="adjustment-to" type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
+          <Input className="rounded-sm" id="adjustment-to" type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
         </Field>
-        <Button type="submit" disabled={busy}>
+        <Button className="rounded-sm" type="submit" disabled={busy}>
           Cadastrar ajuste
         </Button>
       </Toolbar>
