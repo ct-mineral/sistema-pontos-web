@@ -41,11 +41,23 @@ export type DayActivity = {
   description: string | null;
 };
 
+export type GroupHours = {
+  id: string | null;
+  name: string;
+  startTime: string | null;
+  endTime: string | null;
+  workedMinutes: number;
+  expectedMinutes: number | null;
+  remainingMinutes: number | null;
+  scheduleVaries: boolean;
+};
+
 export type DaySummary = {
   date: string;
   workedMinutes: number;
   expectedMinutes: number | null;
   remainingMinutes: number | null;
+  groups: GroupHours[];
   activities: DayActivity[];
 };
 
@@ -55,6 +67,7 @@ export type PeriodSummary = {
   workedMinutes: number;
   expectedMinutes: number | null;
   remainingMinutes: number | null;
+  groups: GroupHours[];
   days: DaySummary[];
 };
 

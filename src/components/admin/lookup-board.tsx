@@ -10,6 +10,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -36,6 +37,7 @@ import {
   fetchSummaryByEnrollment,
   type DayActivity,
   type DaySummary,
+  type GroupHours,
   type PeriodSummary,
 } from "@/lib/admin-api";
 import { ApiError } from "@/lib/api";
@@ -175,48 +177,56 @@ export function LookupBoard() {
           {summary ? ` · ${formatDay(summary.date)}` : ""}
         </p>
       ) : null}
-      {totals ? (
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Metric
-            label="Trabalhado"
-            value={minutesLabel(totals.workedMinutes)}
-          />
-          <Metric
-            label="Previsto"
-            value={minutesLabel(totals.expectedMinutes)}
-          />
-          <Metric
-            label="Restante"
-            value={minutesLabel(totals.remainingMinutes)}
-          />
-        </div>
-      ) : null}
+      {totals ? <GroupHoursCards groups={totals.groups} /> : null}
       {queried && days.length > 0 ? (
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Dia</TableHead>
+              <TableHead>Grupo</TableHead>
+              <TableHead>Horário</TableHead>
               <TableHead>Trabalhado</TableHead>
               <TableHead>Previsto</TableHead>
               <TableHead>Restante</TableHead>
+              <TableHead>Descrições</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {days.map((day) => (
-              <TableRow key={day.date}>
-                <TableCell className="font-medium">{formatDay(day.date)}</TableCell>
-                <TableCell>{minutesLabel(day.workedMinutes)}</TableCell>
-                <TableCell>{minutesLabel(day.expectedMinutes)}</TableCell>
-                <TableCell>{minutesLabel(day.remainingMinutes)}</TableCell>
-                <TableCell>
-                  <DayDescriptions
-                    enrollment={queried}
-                    date={formatDay(day.date)}
-                    activities={day.activities ?? []}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
+            {days.flatMap((day) =>
+              day.groups.length === 0 ? (
+                <TableRow key={day.date}>
+                  <TableCell className="font-medium">{formatDay(day.date)}</TableCell>
+                  <TableCell colSpan={5}>Nenhum grupo com horário neste dia.</TableCell>
+                  <TableCell>
+                    <DayDescriptions
+                      enrollment={queried}
+                      date={formatDay(day.date)}
+                      activities={day.activities ?? []}
+                    />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                day.groups.map((group, index) => (
+                  <TableRow key={`${day.date}-${group.id ?? group.name}`}>
+                    <TableCell className="font-medium">{formatDay(day.date)}</TableCell>
+                    <TableCell>{group.name}</TableCell>
+                    <TableCell>{scheduleOf(group)}</TableCell>
+                    <TableCell>{minutesLabel(group.workedMinutes)}</TableCell>
+                    <TableCell>{minutesLabel(group.expectedMinutes)}</TableCell>
+                    <TableCell>{minutesLabel(group.remainingMinutes)}</TableCell>
+                    <TableCell>
+                      {index === 0 ? (
+                        <DayDescriptions
+                          enrollment={queried}
+                          date={formatDay(day.date)}
+                          activities={day.activities ?? []}
+                        />
+                      ) : null}
+                    </TableCell>
+                  </TableRow>
+                ))
+              ),
+            )}
           </TableBody>
         </Table>
       ) : null}
@@ -224,15 +234,45 @@ export function LookupBoard() {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function GroupHoursCards({ groups }: { groups: GroupHours[] }) {
+  if (groups.length === 0) {
+    return <p className="text-sm text-muted-foreground">Nenhum grupo com horário neste período.</p>;
+  }
+
   return (
-    <Card size="sm">
-      <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-xl">{value}</CardTitle>
-      </CardHeader>
-    </Card>
+    <div className="flex flex-col gap-3">
+      {groups.map((group) => (
+        <Card key={group.id ?? group.name} size="sm">
+          <CardHeader>
+            <CardTitle>{group.name}</CardTitle>
+            <CardDescription>{scheduleOf(group)}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Hours label="Trabalhado" value={minutesLabel(group.workedMinutes)} />
+              <Hours label="Previsto" value={minutesLabel(group.expectedMinutes)} />
+              <Hours label="Restante" value={minutesLabel(group.remainingMinutes)} />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
+}
+
+function Hours({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-lg font-medium">{value}</p>
+    </div>
+  );
+}
+
+function scheduleOf(group: Pick<GroupHours, "startTime" | "endTime" | "scheduleVaries">) {
+  if (group.scheduleVaries) return "Horário varia no período";
+  if (group.startTime && group.endTime) return `${group.startTime}–${group.endTime}`;
+  return "Horário não definido";
 }
 
 function DayDescriptions({
