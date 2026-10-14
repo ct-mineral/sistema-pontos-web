@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPage, EmptyRow, Field, Notice, StatusBadge, Toolbar } from "@/components/admin/page-frame";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -22,20 +24,24 @@ import {
 import {
   ApiError,
   authorizeEnrollment,
+  deleteEnrollment,
   listEnrollments,
   ROLE_LABEL,
+  updateEnrollment,
   updateEnrollmentStatus,
   type ManagedUser,
   type UserRole,
 } from "@/lib/api";
-
-const ROLES: UserRole[] = ["ALUNO", "PRESTADOR", "SERVIDOR"];
+import { useSession } from "@/lib/use-session";
 
 export function EnrollmentBoard() {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<ManagedUser | null>(null);
+  const [removing, setRemoving] = useState<ManagedUser | null>(null);
+  const { user: session } = useSession();
 
   useEffect(() => {
     let active = true;
@@ -67,10 +73,25 @@ export function EnrollmentBoard() {
     }
   }
 
+  async function remove(user: ManagedUser) {
+    setPendingId(user.id);
+    setLoadError(null);
+    try {
+      await deleteEnrollment(user.id);
+      setUsers((current) => current.filter((item) => item.id !== user.id));
+      setRemoving(null);
+    } catch (caught) {
+      setLoadError(messageOf(caught));
+      setRemoving(null);
+    } finally {
+      setPendingId(null);
+    }
+  }
+
   return (
     <AdminPage
       title="Matrículas"
-      description="Autorize uma matrícula e acompanhe quem pode entrar. O status e o acesso ficam em cada linha."
+      description="Autorize uma matrícula para liberar o acesso. O papel vem do SUAP no primeiro login e aparece na tabela."
     >
       <AuthorizeForm
         onCreated={(created) =>
@@ -85,7 +106,7 @@ export function EnrollmentBoard() {
             <TableHead>Nome</TableHead>
             <TableHead>Papel</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">Acesso</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -103,28 +124,85 @@ export function EnrollmentBoard() {
                   <StatusBadge active={user.status} off="Desativado" />
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={user.status ? "outline" : "default"}
-                    disabled={pendingId === user.id}
-                    onClick={() => void changeStatus(user, !user.status)}
-                  >
-                    {user.status ? "Desativar" : "Ativar"}
-                  </Button>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={user.status ? "outline" : "default"}
+                      disabled={pendingId === user.id}
+                      onClick={() => void changeStatus(user, !user.status)}
+                    >
+                      {user.status ? "Desativar" : "Ativar"}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={pendingId === user.id}
+                      onClick={() => setEditing(user)}
+                    >
+                      Editar
+                    </Button>
+                    {session?.id === user.id ? null : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        disabled={pendingId === user.id}
+                        onClick={() => setRemoving(user)}
+                      >
+                        Excluir
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))
           )}
         </TableBody>
       </Table>
+      {editing ? (
+        <EditEnrollmentDialog
+          key={editing.id}
+          user={editing}
+          busy={pendingId === editing.id}
+          onOpenChange={(open) => {
+            if (!open) setEditing(null);
+          }}
+          onSave={async (suapEnrollment) => {
+            setPendingId(editing.id);
+            try {
+              const next = await updateEnrollment(editing.id, suapEnrollment);
+              setUsers((current) => current.map((item) => (item.id === next.id ? next : item)));
+              setEditing(null);
+            } finally {
+              setPendingId(null);
+            }
+          }}
+        />
+      ) : null}
+      <ConfirmDialog
+        open={removing !== null}
+        title="Excluir matrícula"
+        description={
+          removing
+            ? `Excluir a matrícula ${removing.suapEnrollment}? Vínculos e ajustes dessa matrícula também saem. Matrículas com ponto registrado não podem ser excluídas.`
+            : ""
+        }
+        busy={pendingId !== null}
+        onOpenChange={(open) => {
+          if (!open) setRemoving(null);
+        }}
+        onConfirm={() => {
+          if (removing) void remove(removing);
+        }}
+      />
     </AdminPage>
   );
 }
 
 function AuthorizeForm({ onCreated }: { onCreated: (user: ManagedUser) => void }) {
   const [enrollment, setEnrollment] = useState("");
-  const [role, setRole] = useState<UserRole>("ALUNO");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<NoticeState | null>(null);
 
@@ -138,12 +216,12 @@ function AuthorizeForm({ onCreated }: { onCreated: (user: ManagedUser) => void }
     setBusy(true);
     setNotice(null);
     try {
-      const created = await authorizeEnrollment(suapEnrollment, role);
+      const created = await authorizeEnrollment(suapEnrollment);
       onCreated(created);
       setEnrollment("");
       setNotice({
         tone: "ok",
-        text: `${created.suapEnrollment} autorizada como ${labelOf(created.role)}.`,
+        text: `${created.suapEnrollment} autorizada. O papel aparece após o primeiro acesso pelo SUAP.`,
       });
     } catch (caught) {
       setNotice({ tone: "error", text: messageOf(caught) });
@@ -170,20 +248,6 @@ function AuthorizeForm({ onCreated }: { onCreated: (user: ManagedUser) => void }
             autoCorrect="off"
           />
         </Field>
-        <Field label="Papel" htmlFor="authorize-role">
-          <Select value={role} onValueChange={(value) => value && setRole(value as UserRole)}>
-            <SelectTrigger id="authorize-role" className="w-52">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ROLES.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {ROLE_LABEL[item]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
         <Button type="submit" disabled={busy}>
           Autorizar
         </Button>
@@ -193,7 +257,70 @@ function AuthorizeForm({ onCreated }: { onCreated: (user: ManagedUser) => void }
   );
 }
 
-function labelOf(role: string) {
+function EditEnrollmentDialog({
+  user,
+  busy,
+  onOpenChange,
+  onSave,
+}: {
+  user: ManagedUser;
+  busy: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (suapEnrollment: string) => Promise<void>;
+}) {
+  const [enrollment, setEnrollment] = useState(user.suapEnrollment);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar matrícula</DialogTitle>
+          <DialogDescription>O nome e o papel continuam vindo do SUAP.</DialogDescription>
+        </DialogHeader>
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            const suapEnrollment = enrollment.trim();
+            if (!suapEnrollment) {
+              setFormError("Informe a matrícula.");
+              return;
+            }
+            setFormError(null);
+            try {
+              await onSave(suapEnrollment);
+            } catch (caught) {
+              setFormError(messageOf(caught));
+            }
+          }}
+        >
+          <Field label="Matrícula" htmlFor="edit-enrollment">
+            <Input
+              id="edit-enrollment"
+              value={enrollment}
+              onChange={(event) => setEnrollment(event.target.value)}
+              autoCapitalize="none"
+              autoCorrect="off"
+            />
+          </Field>
+          {formError ? <Notice tone="error">{formError}</Notice> : null}
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={busy}>
+              Salvar
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function labelOf(role: string | null) {
+  if (!role) return "Aguardando acesso";
   return role in ROLE_LABEL ? ROLE_LABEL[role as UserRole] : role;
 }
 

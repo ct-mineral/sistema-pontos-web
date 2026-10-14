@@ -3,7 +3,7 @@ import { getJson, postJson, type UserRole } from "@/lib/api";
 export type GroupPerson = {
   suapEnrollment: string;
   name: string | null;
-  role: UserRole;
+  role: UserRole | null;
 };
 
 export type Group = {
@@ -86,6 +86,30 @@ export function unassignGroup(suapEnrollment: string, groupId: string) {
   );
 }
 
+export function updateGroup(id: string, name: string, startTime: string, endTime: string) {
+  return postJson<Group>(
+    "/api/groups/update",
+    { id, name, startTime, endTime },
+    "Não foi possível editar o grupo.",
+  );
+}
+
+export function updateGroupStatus(id: string, status: boolean) {
+  return postJson<Group>(
+    "/api/groups/update-status",
+    { id, status },
+    "Não foi possível atualizar o grupo.",
+  );
+}
+
+export function deleteGroup(id: string) {
+  return postJson<{ id: string }>(
+    "/api/groups/delete",
+    { id },
+    "Não foi possível excluir o grupo.",
+  );
+}
+
 export function listQrCodes() {
   return getJson<QrCode[]>("/api/qr-codes/list", "Não foi possível carregar os QR codes.");
 }
@@ -106,6 +130,22 @@ export function updateQrCodeStatus(id: string, status: boolean) {
   );
 }
 
+export function updateQrCode(id: string, location: string) {
+  return postJson<QrCode>(
+    "/api/qr-codes/update",
+    { id, location },
+    "Não foi possível editar o QR code.",
+  );
+}
+
+export function deleteQrCode(id: string) {
+  return postJson<{ id: string }>(
+    "/api/qr-codes/delete",
+    { id },
+    "Não foi possível excluir o QR code.",
+  );
+}
+
 export function listAdjustments(suapEnrollment?: string) {
   const query = new URLSearchParams();
   if (suapEnrollment) query.set("suapEnrollment", suapEnrollment);
@@ -115,20 +155,38 @@ export function listAdjustments(suapEnrollment?: string) {
   return getJson<WorkloadAdjustment[]>(path, "Não foi possível carregar os ajustes.");
 }
 
-export function createAdjustment(input: {
-  suapEnrollment: string;
-  groupId: string;
-  startTime: string;
-  endTime: string;
-  startDate: string;
-  endDate?: string;
-}) {
+export function createAdjustment(input: AdjustmentInput) {
   return postJson<WorkloadAdjustment>(
     "/api/workload-adjustments/create",
     input,
     "Não foi possível cadastrar o ajuste.",
   );
 }
+
+export function updateAdjustment(input: AdjustmentInput & { id: string }) {
+  return postJson<WorkloadAdjustment>(
+    "/api/workload-adjustments/update",
+    input,
+    "Não foi possível editar o ajuste.",
+  );
+}
+
+export function deleteAdjustment(id: string) {
+  return postJson<{ id: string }>(
+    "/api/workload-adjustments/delete",
+    { id },
+    "Não foi possível excluir o ajuste.",
+  );
+}
+
+type AdjustmentInput = {
+  suapEnrollment: string;
+  groupId: string;
+  startTime: string;
+  endTime: string;
+  startDate: string;
+  endDate?: string;
+};
 
 export function fetchSummaryByEnrollment(suapEnrollment: string) {
   const query = new URLSearchParams({ suapEnrollment });

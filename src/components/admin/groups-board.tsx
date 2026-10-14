@@ -1,8 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPage, EmptyRow, Field, Notice, StatusBadge, Toolbar } from "@/components/admin/page-frame";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -22,11 +31,14 @@ import {
 import {
   assignGroup,
   createGroup,
+  deleteGroup,
   listGroups,
   unassignGroup,
+  updateGroup,
+  updateGroupStatus,
   type Group,
 } from "@/lib/admin-api";
-import { ApiError, ROLE_LABEL, type UserRole } from "@/lib/api";
+import { ApiError, ROLE_LABEL } from "@/lib/api";
 import { formatSchedule } from "@/lib/schedule";
 
 export function GroupsBoard() {
@@ -34,6 +46,8 @@ export function GroupsBoard() {
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState<NoticeState | null>(null);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<Group | null>(null);
+  const [removing, setRemoving] = useState<Group | null>(null);
 
   async function reload() {
     setGroups(await listGroups());
@@ -55,6 +69,20 @@ export function GroupsBoard() {
       active = false;
     };
   }, []);
+
+  async function changeStatus(group: Group) {
+    setBusy(true);
+    setNotice(null);
+    try {
+      await updateGroupStatus(group.id, !group.status);
+      await reload();
+      setNotice({ tone: "ok", text: group.status ? "Grupo desativado." : "Grupo ativado." });
+    } catch (caught) {
+      setNotice({ tone: "error", text: messageOf(caught, "Não foi possível atualizar o grupo.") });
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <AdminPage
@@ -106,13 +134,14 @@ export function GroupsBoard() {
             <TableHead>Horário</TableHead>
             <TableHead>Pessoas</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
-            <EmptyRow colSpan={4}>Carregando grupos…</EmptyRow>
+            <EmptyRow colSpan={5}>Carregando grupos…</EmptyRow>
           ) : groups.length === 0 ? (
-            <EmptyRow colSpan={4}>Nenhum grupo cadastrado.</EmptyRow>
+            <EmptyRow colSpan={5}>Nenhum grupo cadastrado.</EmptyRow>
           ) : (
             groups.map((group) => (
               <TableRow key={group.id}>
@@ -122,12 +151,154 @@ export function GroupsBoard() {
                 <TableCell>
                   <StatusBadge active={group.status} />
                 </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={group.status ? "outline" : "default"}
+                      disabled={busy}
+                      onClick={() => void changeStatus(group)}
+                    >
+                      {group.status ? "Desativar" : "Ativar"}
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setEditing(group)}>
+                      Editar
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      disabled={busy}
+                      onClick={() => setRemoving(group)}
+                    >
+                      Excluir
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
             ))
           )}
         </TableBody>
       </Table>
+      {editing ? (
+        <EditGroupDialog
+          key={editing.id}
+          group={editing}
+          busy={busy}
+          onOpenChange={(open) => {
+            if (!open) setEditing(null);
+          }}
+          onSave={async (input) => {
+            setBusy(true);
+            try {
+              await updateGroup(editing.id, input.name, input.startTime, input.endTime);
+              await reload();
+              setEditing(null);
+              setNotice({ tone: "ok", text: "Grupo atualizado." });
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
+      ) : null}
+      <ConfirmDialog
+        open={removing !== null}
+        title="Excluir grupo"
+        description={
+          removing
+            ? `Excluir o grupo ${removing.name}? Os vínculos saem junto. Grupos com ponto ou ajuste de carga não podem ser excluídos.`
+            : ""
+        }
+        busy={busy}
+        onOpenChange={(open) => {
+          if (!open) setRemoving(null);
+        }}
+        onConfirm={() => {
+          if (!removing) return;
+          setBusy(true);
+          setNotice(null);
+          deleteGroup(removing.id)
+            .then(async () => {
+              await reload();
+              setRemoving(null);
+              setNotice({ tone: "ok", text: "Grupo excluído." });
+            })
+            .catch((caught: unknown) => {
+              setNotice({ tone: "error", text: messageOf(caught, "Não foi possível excluir o grupo.") });
+              setRemoving(null);
+            })
+            .finally(() => setBusy(false));
+        }}
+      />
     </AdminPage>
+  );
+}
+
+function EditGroupDialog({
+  group,
+  busy,
+  onOpenChange,
+  onSave,
+}: {
+  group: Group;
+  busy: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (input: { name: string; startTime: string; endTime: string }) => Promise<void>;
+}) {
+  const [name, setName] = useState(group.name);
+  const [startTime, setStartTime] = useState(group.startTime ?? "08:00");
+  const [endTime, setEndTime] = useState(group.endTime ?? "12:00");
+  const [formError, setFormError] = useState<string | null>(null);
+
+  return (
+    <Dialog open onOpenChange={(next) => !busy && onOpenChange(next)}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar grupo</DialogTitle>
+          <DialogDescription>Altere o nome e o horário deste grupo.</DialogDescription>
+        </DialogHeader>
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            if (!name.trim() || !startTime || !endTime) {
+              setFormError("Informe o nome, a entrada e a saída.");
+              return;
+            }
+            if (endTime <= startTime) {
+              setFormError("A saída precisa ser depois da entrada.");
+              return;
+            }
+            setFormError(null);
+            try {
+              await onSave({ name: name.trim(), startTime, endTime });
+            } catch (caught) {
+              setFormError(messageOf(caught, "Não foi possível editar o grupo."));
+            }
+          }}
+        >
+          <Field label="Nome" htmlFor="edit-group-name">
+            <Input id="edit-group-name" value={name} onChange={(event) => setName(event.target.value)} />
+          </Field>
+          <Field label="Entrada" htmlFor="edit-group-start">
+            <Input id="edit-group-start" type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
+          </Field>
+          <Field label="Saída" htmlFor="edit-group-end">
+            <Input id="edit-group-end" type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
+          </Field>
+          {formError ? <Notice tone="error">{formError}</Notice> : null}
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={busy}>
+              Salvar
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -250,7 +421,7 @@ function peopleLabel(group: Group) {
   if (group.people.length === 0) return "—";
   return group.people
     .map((person) => {
-      const role = person.role in ROLE_LABEL ? ROLE_LABEL[person.role as UserRole] : person.role;
+      const role = person.role ? ROLE_LABEL[person.role] : "aguardando acesso";
       return `${person.name?.trim() || person.suapEnrollment} (${role})`;
     })
     .join(", ");

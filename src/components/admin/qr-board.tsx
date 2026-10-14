@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { QrImage } from "@/components/admin/qr-image";
 import { AdminPage, EmptyRow, Field, Notice, StatusBadge, Toolbar } from "@/components/admin/page-frame";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -22,7 +23,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { createQrCode, listQrCodes, updateQrCodeStatus, type QrCode } from "@/lib/admin-api";
+import {
+  createQrCode,
+  deleteQrCode,
+  listQrCodes,
+  updateQrCode,
+  updateQrCodeStatus,
+  type QrCode,
+} from "@/lib/admin-api";
 import { ApiError } from "@/lib/api";
 
 export function QrBoard() {
@@ -32,6 +40,8 @@ export function QrBoard() {
   const [busy, setBusy] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<NoticeState | null>(null);
+  const [editing, setEditing] = useState<QrCode | null>(null);
+  const [removing, setRemoving] = useState<QrCode | null>(null);
 
   async function reload() {
     setCodes(await listQrCodes());
@@ -87,6 +97,34 @@ export function QrBoard() {
     }
   }
 
+  async function saveLocation(item: QrCode, location: string) {
+    setPendingId(item.id);
+    try {
+      const next = await updateQrCode(item.id, location);
+      setCodes((current) => current.map((code) => (code.id === next.id ? next : code)));
+      setEditing(null);
+      setNotice({ tone: "ok", text: "QR code atualizado." });
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  async function remove(item: QrCode) {
+    setPendingId(item.id);
+    setNotice(null);
+    try {
+      await deleteQrCode(item.id);
+      setCodes((current) => current.filter((code) => code.id !== item.id));
+      setRemoving(null);
+      setNotice({ tone: "ok", text: "QR code excluído." });
+    } catch (caught) {
+      setNotice({ tone: "error", text: messageOf(caught, "Não foi possível excluir o QR code.") });
+      setRemoving(null);
+    } finally {
+      setPendingId(null);
+    }
+  }
+
   return (
     <AdminPage
       title="QR codes"
@@ -114,7 +152,7 @@ export function QrBoard() {
             <TableHead>Local</TableHead>
             <TableHead>Código</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">Acesso</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -133,22 +171,124 @@ export function QrBoard() {
                   <StatusBadge active={item.status} />
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={item.status ? "outline" : "default"}
-                    disabled={pendingId === item.id}
-                    onClick={() => void changeStatus(item)}
-                  >
-                    {item.status ? "Desativar" : "Ativar"}
-                  </Button>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={item.status ? "outline" : "default"}
+                      disabled={pendingId === item.id}
+                      onClick={() => void changeStatus(item)}
+                    >
+                      {item.status ? "Desativar" : "Ativar"}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={pendingId === item.id}
+                      onClick={() => setEditing(item)}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      disabled={pendingId === item.id}
+                      onClick={() => setRemoving(item)}
+                    >
+                      Excluir
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))
           )}
         </TableBody>
       </Table>
+      {editing ? (
+        <EditQrDialog
+          key={editing.id}
+          item={editing}
+          busy={pendingId === editing.id}
+          onOpenChange={(open) => {
+            if (!open) setEditing(null);
+          }}
+          onSave={(location) => saveLocation(editing, location)}
+        />
+      ) : null}
+      <ConfirmDialog
+        open={removing !== null}
+        title="Excluir QR code"
+        description={
+          removing
+            ? `Excluir o QR code de ${removing.location}? Códigos já usados em registros de ponto não podem ser excluídos.`
+            : ""
+        }
+        busy={pendingId !== null}
+        onOpenChange={(open) => {
+          if (!open) setRemoving(null);
+        }}
+        onConfirm={() => {
+          if (removing) void remove(removing);
+        }}
+      />
     </AdminPage>
+  );
+}
+
+function EditQrDialog({
+  item,
+  busy,
+  onOpenChange,
+  onSave,
+}: {
+  item: QrCode;
+  busy: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (location: string) => Promise<void>;
+}) {
+  const [location, setLocation] = useState(item.location);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  return (
+    <Dialog open onOpenChange={(next) => !busy && onOpenChange(next)}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar QR code</DialogTitle>
+          <DialogDescription>O código impresso continua o mesmo. Só o local muda.</DialogDescription>
+        </DialogHeader>
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            if (!location.trim()) {
+              setFormError("Informe o local.");
+              return;
+            }
+            setFormError(null);
+            try {
+              await onSave(location.trim());
+            } catch (caught) {
+              setFormError(messageOf(caught, "Não foi possível editar o QR code."));
+            }
+          }}
+        >
+          <Field label="Local" htmlFor="edit-qr-location">
+            <Input id="edit-qr-location" value={location} onChange={(event) => setLocation(event.target.value)} />
+          </Field>
+          {formError ? <Notice tone="error">{formError}</Notice> : null}
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={busy}>
+              Salvar
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 

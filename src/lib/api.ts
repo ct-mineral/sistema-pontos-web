@@ -12,7 +12,7 @@ export type ManagedUser = {
   id: string;
   suapEnrollment: string;
   name: string | null;
-  role: UserRole;
+  role: UserRole | null;
   status: boolean;
 };
 
@@ -62,10 +62,10 @@ export async function listEnrollments() {
   return (await response.json()) as ManagedUser[];
 }
 
-export function authorizeEnrollment(suapEnrollment: string, role: UserRole) {
+export function authorizeEnrollment(suapEnrollment: string) {
   return postJson<ManagedUser>(
     "/api/users/authorize",
-    { suapEnrollment, role },
+    { suapEnrollment },
     "Não foi possível autorizar a matrícula.",
   );
 }
@@ -75,6 +75,22 @@ export function updateEnrollmentStatus(suapEnrollment: string, status: boolean) 
     "/api/users/update-status",
     { suapEnrollment, status },
     "Não foi possível atualizar a matrícula.",
+  );
+}
+
+export function updateEnrollment(id: string, suapEnrollment: string) {
+  return postJson<ManagedUser>(
+    "/api/users/update",
+    { id, suapEnrollment },
+    "Não foi possível editar a matrícula.",
+  );
+}
+
+export function deleteEnrollment(id: string) {
+  return postJson<{ id: string }>(
+    "/api/users/delete",
+    { id },
+    "Não foi possível excluir a matrícula.",
   );
 }
 

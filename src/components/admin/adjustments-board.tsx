@@ -1,9 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPage, EmptyRow, Field, Notice, Toolbar } from "@/components/admin/page-frame";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -22,8 +31,10 @@ import {
 } from "@/components/ui/table";
 import {
   createAdjustment,
+  deleteAdjustment,
   listAdjustments,
   listGroups,
+  updateAdjustment,
   type Group,
   type WorkloadAdjustment,
 } from "@/lib/admin-api";
@@ -37,6 +48,8 @@ export function AdjustmentsBoard() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<NoticeState | null>(null);
+  const [editing, setEditing] = useState<WorkloadAdjustment | null>(null);
+  const [removing, setRemoving] = useState<WorkloadAdjustment | null>(null);
   const today = fortalezaToday();
 
   async function reload(enrollment = filter) {
@@ -126,13 +139,14 @@ export function AdjustmentsBoard() {
             <TableHead>Início</TableHead>
             <TableHead>Fim</TableHead>
             <TableHead>Situação</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
-            <EmptyRow colSpan={6}>Carregando ajustes…</EmptyRow>
+            <EmptyRow colSpan={7}>Carregando ajustes…</EmptyRow>
           ) : items.length === 0 ? (
-            <EmptyRow colSpan={6}>Nenhum ajuste cadastrado.</EmptyRow>
+            <EmptyRow colSpan={7}>Nenhum ajuste cadastrado.</EmptyRow>
           ) : (
             items.map((item) => {
               const state = adjustmentState(item, today);
@@ -148,13 +162,218 @@ export function AdjustmentsBoard() {
                       {state === "open" ? "Em aberto" : state === "scheduled" ? "Agendado" : "Encerrado"}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setEditing(item)}>
+                        Editar
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="destructive"
+                        disabled={busy}
+                        onClick={() => setRemoving(item)}
+                      >
+                        Excluir
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               );
             })
           )}
         </TableBody>
       </Table>
+      {editing ? (
+        <EditAdjustmentDialog
+          key={editing.id}
+          item={editing}
+          groups={groups.filter((group) => group.status || group.id === editing.groupId)}
+          busy={busy}
+          onOpenChange={(open) => {
+            if (!open) setEditing(null);
+          }}
+          onSave={async (input) => {
+            setBusy(true);
+            try {
+              const next = await updateAdjustment({ id: editing.id, ...input });
+              setItems((current) => current.map((item) => (item.id === next.id ? next : item)));
+              setEditing(null);
+              setNotice({ tone: "ok", text: "Ajuste atualizado." });
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
+      ) : null}
+      <ConfirmDialog
+        open={removing !== null}
+        title="Excluir ajuste"
+        description={
+          removing ? `Excluir o ajuste da matrícula ${removing.suapEnrollment}? Essa ação não pode ser desfeita.` : ""
+        }
+        busy={busy}
+        onOpenChange={(open) => {
+          if (!open) setRemoving(null);
+        }}
+        onConfirm={() => {
+          if (!removing) return;
+          setBusy(true);
+          setNotice(null);
+          deleteAdjustment(removing.id)
+            .then(() => {
+              setItems((current) => current.filter((item) => item.id !== removing.id));
+              setRemoving(null);
+              setNotice({ tone: "ok", text: "Ajuste excluído." });
+            })
+            .catch((caught: unknown) => {
+              setNotice({ tone: "error", text: messageOf(caught, "Não foi possível excluir o ajuste.") });
+              setRemoving(null);
+            })
+            .finally(() => setBusy(false));
+        }}
+      />
     </AdminPage>
+  );
+}
+
+function EditAdjustmentDialog({
+  item,
+  groups,
+  busy,
+  onOpenChange,
+  onSave,
+}: {
+  item: WorkloadAdjustment;
+  groups: Group[];
+  busy: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (input: {
+    suapEnrollment: string;
+    groupId: string;
+    startTime: string;
+    endTime: string;
+    startDate: string;
+    endDate?: string;
+  }) => Promise<void>;
+}) {
+  const [enrollment, setEnrollment] = useState(item.suapEnrollment);
+  const [groupId, setGroupId] = useState(item.groupId ?? "");
+  const [startTime, setStartTime] = useState(item.startTime ?? "08:00");
+  const [endTime, setEndTime] = useState(item.endTime ?? "12:00");
+  const [startDate, setStartDate] = useState(item.startDate.slice(0, 10));
+  const [endDate, setEndDate] = useState(item.endDate?.slice(0, 10) ?? "");
+  const [formError, setFormError] = useState<string | null>(null);
+
+  return (
+    <Dialog open onOpenChange={(next) => !busy && onOpenChange(next)}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Editar ajuste</DialogTitle>
+          <DialogDescription>Altere o horário, o grupo ou o período deste ajuste.</DialogDescription>
+        </DialogHeader>
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!enrollment.trim() || !groupId || !startDate || !startTime || !endTime) {
+              setFormError("Informe a matrícula, o grupo, o horário e a data de início.");
+              return;
+            }
+            if (endTime <= startTime) {
+              setFormError("A saída precisa ser depois da entrada.");
+              return;
+            }
+            if (endDate && endDate < startDate) {
+              setFormError("A data de fim precisa ser igual ou posterior à de início.");
+              return;
+            }
+            setFormError(null);
+            void (async () => {
+              try {
+                await onSave({
+                  suapEnrollment: enrollment.trim(),
+                  groupId,
+                  startTime,
+                  endTime,
+                  startDate,
+                  ...(endDate ? { endDate } : {}),
+                });
+              } catch (caught) {
+                setFormError(messageOf(caught, "Não foi possível editar o ajuste."));
+              }
+            })();
+          }}
+        >
+          <Field label="Matrícula" htmlFor="edit-adjustment-enrollment">
+            <Input
+              id="edit-adjustment-enrollment"
+              value={enrollment}
+              onChange={(event) => setEnrollment(event.target.value)}
+              autoCapitalize="none"
+              autoCorrect="off"
+            />
+          </Field>
+          <Field label="Grupo" htmlFor="edit-adjustment-group">
+            <Select value={groupId || null} onValueChange={(value) => setGroupId(value ?? "")}>
+              <SelectTrigger id="edit-adjustment-group" className="w-full">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {groups.map((group) => (
+                  <SelectItem key={group.id} value={group.id}>
+                    {group.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Entrada" htmlFor="edit-adjustment-start">
+              <Input
+                id="edit-adjustment-start"
+                type="time"
+                value={startTime}
+                onChange={(event) => setStartTime(event.target.value)}
+              />
+            </Field>
+            <Field label="Saída" htmlFor="edit-adjustment-end">
+              <Input
+                id="edit-adjustment-end"
+                type="time"
+                value={endTime}
+                onChange={(event) => setEndTime(event.target.value)}
+              />
+            </Field>
+            <Field label="Início" htmlFor="edit-adjustment-from">
+              <Input
+                id="edit-adjustment-from"
+                type="date"
+                value={startDate}
+                onChange={(event) => setStartDate(event.target.value)}
+              />
+            </Field>
+            <Field label="Fim" htmlFor="edit-adjustment-to">
+              <Input
+                id="edit-adjustment-to"
+                type="date"
+                value={endDate}
+                onChange={(event) => setEndDate(event.target.value)}
+              />
+            </Field>
+          </div>
+          {formError ? <Notice tone="error">{formError}</Notice> : null}
+          <DialogFooter>
+            <Button type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={busy}>
+              Salvar
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
