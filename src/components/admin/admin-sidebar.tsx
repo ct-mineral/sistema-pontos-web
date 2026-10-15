@@ -69,9 +69,9 @@ export function AdminSidebar({ user }: { user: SessionUser }) {
           <p className="truncate text-sm font-medium">{user.name?.trim() || "Servidor"}</p>
           <p className="truncate text-xs text-muted-foreground">{user.suapEnrollment}</p>
         </div>
-        <Button variant="outline" className="w-full" onClick={() => void logout()}>
-          <LogOut />
-          <span className="group-data-[collapsible=icon]:hidden">Sair</span>
+        <Button variant="outline" className="w-full rounded-sm bg-red-500 hover:bg-red-600 cursor-pointer" onClick={() => void logout()}>
+          <LogOut className="text-white" />
+          <span className="group-data-[collapsible=icon]:hidden text-white">Sair</span>
         </Button>
       </SidebarFooter>
       <SidebarRail />

@@ -19,7 +19,7 @@ export function LoginScreen() {
   }, [isStaff, phase, router]);
 
   return (
-    <main className="flex min-h-dvh flex-col bg-background font-[family-name:var(--font-poppins)] text-foreground lg:h-dvh lg:flex-row lg:overflow-hidden">
+    <main className="flex min-h-dvh flex-col bg-background text-foreground lg:h-dvh lg:flex-row lg:overflow-hidden">
       <section className="flex min-h-dvh flex-1 items-center justify-center px-4 py-6 lg:min-h-0 lg:px-6">
         {phase === "loading" || isStaff ? (
           <p className="text-sm text-muted-foreground">Carregando sessão…</p>
@@ -28,20 +28,24 @@ export function LoginScreen() {
             title="Acesso restrito"
             description={`Somente servidores administram esta área. A matrícula ${user.suapEnrollment} entrou como ${ROLE_LABEL[user.role]}.`}
             action={
-              <Button type="button" className="h-10 w-full" onClick={() => void logout()}>
+              <Button
+                type="button"
+                className="h-10 w-full rounded-sm"
+                onClick={() => void logout()}
+              >
                 Sair
               </Button>
             }
           />
         ) : (
           <LoginPanel
-            title="Acesse sua conta"
-            description="Registre o ponto e acompanhe a jornada com mais facilidade no Sistema de pontos."
+            title="Bem-vindo(a) a área do administrador"
+            description="Gerencie as operações do sistema de forma eficiente e segura."
             notice={error}
-            footnote="O acesso depende de uma matrícula autorizada por um servidor."
+            footnote="O acesso depende de uma conta autorizada no sistema."
             action={
               <Button
-                className="h-10 w-full"
+                className="h-10 w-full rounded-sm"
                 nativeButton={false}
                 render={<a href={`${API_ORIGIN}/api/auth/suap`} />}
               >
@@ -51,7 +55,10 @@ export function LoginScreen() {
           />
         )}
       </section>
-      <aside className="hidden lg:flex lg:h-dvh lg:w-1/2 lg:p-8" aria-hidden="true">
+      <aside
+        className="hidden lg:flex lg:h-dvh lg:w-1/2 lg:p-8"
+        aria-hidden="true"
+      >
         <LoginHero />
       </aside>
     </main>
@@ -77,7 +84,9 @@ function LoginPanel({
         <BrandMark />
         <div className="space-y-1">
           <h1 className="text-2xl font-medium tracking-tight">{title}</h1>
-          <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {description}
+          </p>
         </div>
       </div>
       <div className="flex flex-col gap-4">
@@ -87,7 +96,11 @@ function LoginPanel({
           </Alert>
         ) : null}
         {action}
-        {footnote ? <p className="text-sm leading-relaxed text-muted-foreground">{footnote}</p> : null}
+        {footnote ? (
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {footnote}
+          </p>
+        ) : null}
       </div>
     </section>
   );
