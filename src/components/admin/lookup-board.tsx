@@ -32,10 +32,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { JustificationBadge } from "@/components/admin/justifications-board";
 import {
   fetchPeriodByEnrollment,
   fetchSummaryByEnrollment,
   type DayActivity,
+  type DayJustification,
   type DaySummary,
   type GroupHours,
   type PeriodSummary,
@@ -188,6 +190,7 @@ export function LookupBoard() {
               <TableHead>Trabalhado</TableHead>
               <TableHead>Previsto</TableHead>
               <TableHead>Restante</TableHead>
+              <TableHead>Justificativa</TableHead>
               <TableHead>Descrições</TableHead>
             </TableRow>
           </TableHeader>
@@ -197,6 +200,9 @@ export function LookupBoard() {
                 <TableRow key={day.date}>
                   <TableCell className="font-medium">{formatDay(day.date)}</TableCell>
                   <TableCell colSpan={5}>Nenhum grupo com horário neste dia.</TableCell>
+                  <TableCell>
+                    <JustificationMarks items={day.justifications ?? []} />
+                  </TableCell>
                   <TableCell>
                     <DayDescriptions
                       enrollment={queried}
@@ -214,6 +220,9 @@ export function LookupBoard() {
                     <TableCell>{minutesLabel(group.workedMinutes)}</TableCell>
                     <TableCell>{minutesLabel(group.expectedMinutes)}</TableCell>
                     <TableCell>{minutesLabel(group.remainingMinutes)}</TableCell>
+                    <TableCell>
+                      {index === 0 ? <JustificationMarks items={day.justifications ?? []} /> : null}
+                    </TableCell>
                     <TableCell>
                       {index === 0 ? (
                         <DayDescriptions
@@ -318,6 +327,33 @@ function DayDescriptions({
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function JustificationMarks({ items }: { items: DayJustification[] }) {
+  if (items.length === 0) {
+    return <span className="text-sm text-muted-foreground">—</span>;
+  }
+
+  return (
+    <ul className="space-y-2">
+      {items.map((item) => (
+        <li key={`${item.recordedAt}-${item.status}`} className="space-y-1">
+          <JustificationBadge status={item.status} />
+          <p className="text-xs text-muted-foreground">
+            Saída {formatTime(item.recordedAt)} · previsto {item.scheduledEnd}
+          </p>
+          <p className="max-w-xs whitespace-pre-wrap text-sm">
+            {item.reason?.trim() || "Aguardando motivo"}
+          </p>
+          {item.makeupDate && item.makeupStart && item.makeupEnd ? (
+            <p className="text-sm">
+              Acerto em {formatDay(item.makeupDate)}, das {item.makeupStart} às {item.makeupEnd}
+            </p>
+          ) : null}
+        </li>
+      ))}
+    </ul>
   );
 }
 

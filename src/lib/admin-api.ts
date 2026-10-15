@@ -41,6 +41,42 @@ export type DayActivity = {
   description: string | null;
 };
 
+export type JustificationStatus = "PENDENTE" | "APROVADA" | "APROVADA_PARCIAL" | "RECUSADA";
+
+export const JUSTIFICATION_LABEL: Record<JustificationStatus, string> = {
+  PENDENTE: "Pendente",
+  APROVADA: "Aprovada",
+  APROVADA_PARCIAL: "Aprovada parcialmente",
+  RECUSADA: "Recusada",
+};
+
+export type DayJustification = {
+  recordedAt: string;
+  scheduledEnd: string;
+  reason: string | null;
+  status: JustificationStatus;
+  makeupDate: string | null;
+  makeupStart: string | null;
+  makeupEnd: string | null;
+};
+
+export type EarlyExitJustification = {
+  id: string;
+  userId: string;
+  suapEnrollment: string;
+  name: string | null;
+  groupName: string | null;
+  recordedAt: string;
+  scheduledEnd: string;
+  reason: string | null;
+  status: JustificationStatus;
+  makeupDate: string | null;
+  makeupStart: string | null;
+  makeupEnd: string | null;
+  reviewerName: string | null;
+  reviewedAt: string | null;
+};
+
 export type GroupHours = {
   id: string | null;
   name: string;
@@ -59,6 +95,7 @@ export type DaySummary = {
   remainingMinutes: number | null;
   groups: GroupHours[];
   activities: DayActivity[];
+  justifications: DayJustification[];
 };
 
 export type PeriodSummary = {
@@ -206,6 +243,25 @@ export function fetchSummaryByEnrollment(suapEnrollment: string) {
   return getJson<DaySummary>(
     `/api/time-records/summary-by-user?${query.toString()}`,
     "Não foi possível consultar o dia.",
+  );
+}
+
+export function listJustifications() {
+  return getJson<EarlyExitJustification[]>(
+    "/api/time-records/justifications",
+    "Não foi possível carregar as justificativas.",
+  );
+}
+
+export function reviewJustification(
+  id: string,
+  status: "APROVADA" | "APROVADA_PARCIAL" | "RECUSADA",
+  makeup?: { makeupDate: string; makeupStart: string },
+) {
+  return postJson<EarlyExitJustification>(
+    "/api/time-records/justifications/review",
+    { id, status, ...makeup },
+    "Não foi possível analisar a justificativa.",
   );
 }
 

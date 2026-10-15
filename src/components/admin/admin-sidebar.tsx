@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IdCard, LogOut, QrCode, Search, SlidersHorizontal, Users } from "lucide-react";
+import { ClipboardCheck, IdCard, LogOut, QrCode, Search, SlidersHorizontal, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { logout, type SessionUser } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ export const ADMIN_ROUTES: { href: string; label: string; icon: LucideIcon }[] =
   { href: "/admin/grupos", label: "Grupos", icon: Users },
   { href: "/admin/qr-codes", label: "QR Codes", icon: QrCode },
   { href: "/admin/ajustes", label: "Ajustes de carga", icon: SlidersHorizontal },
+  { href: "/admin/justificativas", label: "Justificativas", icon: ClipboardCheck },
   { href: "/admin/consulta", label: "Consultar matrícula", icon: Search },
 ];
 
