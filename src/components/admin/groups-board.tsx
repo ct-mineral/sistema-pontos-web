@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPage, EmptyRow, Field, Notice, StatusBadge, Toolbar } from "@/components/admin/page-frame";
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/form/action-button";
+import { TextField } from "@/components/form/text-field";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -153,29 +153,20 @@ export function GroupsBoard() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button
-                      className="rounded-sm px-2"
-                      type="button"
+                    <ActionButton
                       size="sm"
-                      variant={group.status ? "outline" : "default"}
+                      intent={group.status ? "outline" : "primary"}
                       disabled={busy}
                       onClick={() => void changeStatus(group)}
                     >
                       {group.status ? "Desativar" : "Ativar"}
-                    </Button>
-                    <Button className="rounded-sm px-2" type="button" size="sm" variant="outline" disabled={busy} onClick={() => setEditing(group)}>
+                    </ActionButton>
+                    <ActionButton size="sm" intent="outline" disabled={busy} onClick={() => setEditing(group)}>
                       Editar
-                    </Button>
-                    <Button
-                      className="rounded-sm px-2"
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      disabled={busy}
-                      onClick={() => setRemoving(group)}
-                    >
+                    </ActionButton>
+                    <ActionButton size="sm" intent="danger" disabled={busy} onClick={() => setRemoving(group)}>
                       Excluir
-                    </Button>
+                    </ActionButton>
                   </div>
                 </TableCell>
               </TableRow>
@@ -280,23 +271,17 @@ function EditGroupDialog({
             }
           }}
         >
-          <Field label="Nome" htmlFor="edit-group-name">
-            <Input id="edit-group-name" value={name} onChange={(event) => setName(event.target.value)} />
-          </Field>
-          <Field label="Entrada" htmlFor="edit-group-start">
-            <Input id="edit-group-start" type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
-          </Field>
-          <Field label="Saída" htmlFor="edit-group-end">
-            <Input id="edit-group-end" type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
-          </Field>
+          <TextField id="edit-group-name" label="Nome" value={name} onValueChange={setName} />
+          <TextField id="edit-group-start" label="Entrada" type="time" value={startTime} onValueChange={setStartTime} />
+          <TextField id="edit-group-end" label="Saída" type="time" value={endTime} onValueChange={setEndTime} />
           {formError ? <Notice tone="error">{formError}</Notice> : null}
           <DialogFooter>
-            <Button className="rounded-sm px-2" type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
+            <ActionButton intent="outline" disabled={busy} onClick={() => onOpenChange(false)}>
               Cancelar
-            </Button>
-            <Button className="rounded-sm" type="submit" disabled={busy}>
+            </ActionButton>
+            <ActionButton type="submit" disabled={busy}>
               Salvar
-            </Button>
+            </ActionButton>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -334,18 +319,12 @@ function CreateGroupForm({
       }}
     >
       <Toolbar>
-        <Field label="Nome" htmlFor="group-name">
-          <Input className="rounded-sm" id="group-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Informe o nome do grupo" />
-        </Field>
-        <Field label="Entrada" htmlFor="group-start">
-          <Input className="rounded-sm" id="group-start" type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
-        </Field>
-        <Field label="Saída" htmlFor="group-end">
-          <Input className="rounded-sm" id="group-end" type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
-        </Field>
-        <Button className="rounded-sm" type="submit" disabled={busy}>
+        <TextField id="group-name" label="Nome" value={name} onValueChange={setName} placeholder="Informe o nome do grupo" />
+        <TextField id="group-start" label="Entrada" type="time" value={startTime} onValueChange={setStartTime} />
+        <TextField id="group-end" label="Saída" type="time" value={endTime} onValueChange={setEndTime} />
+        <ActionButton type="submit" disabled={busy}>
           Cadastrar grupo
-        </Button>
+        </ActionButton>
       </Toolbar>
       {formError ? <Notice tone="error">{formError}</Notice> : null}
     </form>
@@ -384,20 +363,17 @@ function MembershipForm({
       }}
     >
       <Toolbar>
-        <Field label="Matrícula" htmlFor="group-enrollment">
-          <Input
-            className="rounded-sm w-2xs"
-            id="group-enrollment"
-            value={enrollment}
-            onChange={(event) => setEnrollment(event.target.value)}
-            autoCapitalize="none"
-            autoCorrect="off"
-            placeholder="Informe a matrícula do usuário"
-          />
-        </Field>
+        <TextField
+          id="group-enrollment"
+          label="Matrícula"
+          value={enrollment}
+          onValueChange={setEnrollment}
+          placeholder="Informe a matrícula do usuário"
+          className="w-2xs"
+        />
         <Field label="Grupo ativo" htmlFor="group-choice">
           <Select value={groupId || null} onValueChange={(value) => setGroupId(value ?? "")}>
-            <SelectTrigger className="rounded-sm w-52" id="group-choice">
+            <SelectTrigger className="rounded-sm w-2xs py-4" id="group-choice">
               <SelectValue placeholder="Selecione" />
             </SelectTrigger>
             <SelectContent>
@@ -409,12 +385,12 @@ function MembershipForm({
             </SelectContent>
           </Select>
         </Field>
-        <Button className="rounded-sm" type="submit" disabled={busy}>
+        <ActionButton type="submit" disabled={busy}>
           Vincular
-        </Button>
-        <Button className="rounded-sm px-2" type="button" variant="outline" disabled={busy} onClick={() => void submit("unassign")}>
+        </ActionButton>
+        <ActionButton intent="danger-soft" disabled={busy} onClick={() => void submit("unassign")}>
           Remover do grupo
-        </Button>
+        </ActionButton>
       </Toolbar>
       {formError ? <Notice tone="error">{formError}</Notice> : null}
     </form>

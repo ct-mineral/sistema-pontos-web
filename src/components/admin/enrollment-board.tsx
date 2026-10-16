@@ -5,12 +5,12 @@ import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import {
   AdminPage,
   EmptyRow,
-  Field,
   Notice,
   StatusBadge,
   Toolbar,
 } from "@/components/admin/page-frame";
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/form/action-button";
+import { TextField } from "@/components/form/text-field";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -139,37 +138,31 @@ export function EnrollmentBoard() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button
-                      className="rounded-sm px-2"
-                      type="button"
+                    <ActionButton
                       size="sm"
-                      variant={user.status ? "outline" : "default"}
+                      intent={user.status ? "outline" : "primary"}
                       disabled={pendingId === user.id}
                       onClick={() => void changeStatus(user, !user.status)}
                     >
                       {user.status ? "Desativar" : "Ativar"}
-                    </Button>
-                    <Button
-                      className="rounded-sm px-2"
-                      type="button"
+                    </ActionButton>
+                    <ActionButton
                       size="sm"
-                      variant="outline"
+                      intent="outline"
                       disabled={pendingId === user.id}
                       onClick={() => setEditing(user)}
                     >
                       Editar
-                    </Button>
+                    </ActionButton>
                     {session?.id === user.id ? null : (
-                      <Button
-                        className="rounded-sm px-2"
-                        type="button"
+                      <ActionButton
                         size="sm"
-                        variant="destructive"
+                        intent="danger"
                         disabled={pendingId === user.id}
                         onClick={() => setRemoving(user)}
                       >
                         Excluir
-                      </Button>
+                      </ActionButton>
                     )}
                   </div>
                 </TableCell>
@@ -262,20 +255,17 @@ function AuthorizeForm({
       }}
     >
       <Toolbar>
-        <Field label="Matrícula" htmlFor="authorize-enrollment">
-          <Input
-            id="authorize-enrollment"
-            className="rounded-sm w-2xs"
-            value={enrollment}
-            onChange={(event) => setEnrollment(event.target.value)}
-            autoCapitalize="none"
-            autoCorrect="off"
-            placeholder="Informe a matrícula do usuário"
-          />
-        </Field>
-        <Button className="rounded-sm" type="submit" disabled={busy}>
+        <TextField
+          id="authorize-enrollment"
+          label="Matrícula"
+          value={enrollment}
+          onValueChange={setEnrollment}
+          placeholder="Informe a matrícula do usuário"
+          className="w-2xs"
+        />
+        <ActionButton type="submit" disabled={busy}>
           Autorizar
-        </Button>
+        </ActionButton>
       </Toolbar>
       {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
     </form>
@@ -322,28 +312,15 @@ function EditEnrollmentDialog({
             }
           }}
         >
-          <Field label="Matrícula" htmlFor="edit-enrollment">
-            <Input
-              id="edit-enrollment"
-              value={enrollment}
-              onChange={(event) => setEnrollment(event.target.value)}
-              autoCapitalize="none"
-              autoCorrect="off"
-            />
-          </Field>
+          <TextField id="edit-enrollment" label="Matrícula" value={enrollment} onValueChange={setEnrollment} />
           {formError ? <Notice tone="error">{formError}</Notice> : null}
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy}
-              onClick={() => onOpenChange(false)}
-            >
+            <ActionButton intent="outline" disabled={busy} onClick={() => onOpenChange(false)}>
               Cancelar
-            </Button>
-            <Button type="submit" disabled={busy}>
+            </ActionButton>
+            <ActionButton type="submit" disabled={busy}>
               Salvar
-            </Button>
+            </ActionButton>
           </DialogFooter>
         </form>
       </DialogContent>

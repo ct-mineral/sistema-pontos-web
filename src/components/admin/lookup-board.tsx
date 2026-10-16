@@ -3,11 +3,12 @@
 import { useState } from "react";
 import {
   AdminPage,
-  Field,
   Notice,
   Toolbar,
 } from "@/components/admin/page-frame";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { ActionButton } from "@/components/form/action-button";
+import { TextField } from "@/components/form/text-field";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -23,7 +24,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -130,46 +130,15 @@ export function LookupBoard() {
         }}
       >
         <Toolbar>
-          <Field label="Matrícula" htmlFor="lookup-enrollment">
-            <Input
-              className="rounded-sm"
-              id="lookup-enrollment"
-              value={enrollment}
-              onChange={(event) => setEnrollment(event.target.value)}
-              autoCapitalize="none"
-              autoCorrect="off"
-            />
-          </Field>
-          <Field label="De" htmlFor="lookup-from">
-            <Input
-              className="rounded-sm"
-              id="lookup-from"
-              type="date"
-              value={from}
-              onChange={(event) => setFrom(event.target.value)}
-            />
-          </Field>
-          <Field label="Até" htmlFor="lookup-to">
-            <Input
-              className="rounded-sm"
-              id="lookup-to"
-              type="date"
-              value={to}
-              onChange={(event) => setTo(event.target.value)}
-            />
-          </Field>
-          <Button className="rounded-sm" type="submit" disabled={loading}>
+          <TextField id="lookup-enrollment" placeholder="Informe a matrícula" label="Matrícula" value={enrollment} onValueChange={setEnrollment} />
+          <TextField id="lookup-from" label="De" type="date" value={from} onValueChange={setFrom} />
+          <TextField id="lookup-to" label="Até" type="date" value={to} onValueChange={setTo} />
+          <ActionButton type="submit" disabled={loading}>
             Consultar hoje
-          </Button>
-          <Button
-            className="rounded-sm px-2"
-            type="button"
-            variant="outline"
-            disabled={loading}
-            onClick={() => void loadPeriod()}
-          >
+          </ActionButton>
+          <ActionButton intent="outline" disabled={loading} onClick={() => void loadPeriod()}>
             Aplicar período
-          </Button>
+          </ActionButton>
         </Toolbar>
       </form>
       {notice ? <Notice tone="error">{notice}</Notice> : null}

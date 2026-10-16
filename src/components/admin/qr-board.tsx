@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { QrImage } from "@/components/admin/qr-image";
-import { AdminPage, EmptyRow, Field, Notice, StatusBadge, Toolbar } from "@/components/admin/page-frame";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { AdminPage, EmptyRow, Notice, StatusBadge, Toolbar } from "@/components/admin/page-frame";
+import { ActionButton } from "@/components/form/action-button";
+import { TextField } from "@/components/form/text-field";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +16,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -137,12 +138,17 @@ export function QrBoard() {
         }}
       >
         <Toolbar>
-          <Field label="Local" htmlFor="qr-location">
-            <Input className="rounded-sm w-2xs" id="qr-location" value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Informe o local que do QR Code" />
-          </Field>
-          <Button className="rounded-sm" type="submit" disabled={busy}>
+          <TextField
+            id="qr-location"
+            label="Local"
+            value={location}
+            onValueChange={setLocation}
+            placeholder="Informe o local que do QR Code"
+            className="w-2xs"
+          />
+          <ActionButton type="submit" disabled={busy}>
             Cadastrar
-          </Button>
+          </ActionButton>
         </Toolbar>
       </form>
       {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
@@ -172,36 +178,20 @@ export function QrBoard() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button
-                      className="rounded-sm"
-                      type="button"
+                    <ActionButton
                       size="sm"
-                      variant={item.status ? "outline" : "default"}
+                      intent={item.status ? "outline" : "primary"}
                       disabled={pendingId === item.id}
                       onClick={() => void changeStatus(item)}
                     >
                       {item.status ? "Desativar" : "Ativar"}
-                    </Button>
-                    <Button
-                      className="rounded-sm"
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={pendingId === item.id}
-                      onClick={() => setEditing(item)}
-                    >
+                    </ActionButton>
+                    <ActionButton size="sm" intent="outline" disabled={pendingId === item.id} onClick={() => setEditing(item)}>
                       Editar
-                    </Button>
-                    <Button
-                      className="rounded-sm"
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      disabled={pendingId === item.id}
-                      onClick={() => setRemoving(item)}
-                    >
+                    </ActionButton>
+                    <ActionButton size="sm" intent="danger" disabled={pendingId === item.id} onClick={() => setRemoving(item)}>
                       Excluir
-                    </Button>
+                    </ActionButton>
                   </div>
                 </TableCell>
               </TableRow>
@@ -277,17 +267,15 @@ function EditQrDialog({
             }
           }}
         >
-          <Field label="Local" htmlFor="edit-qr-location">
-            <Input id="edit-qr-location" value={location} onChange={(event) => setLocation(event.target.value)} />
-          </Field>
+          <TextField id="edit-qr-location" label="Local" value={location} onValueChange={setLocation} />
           {formError ? <Notice tone="error">{formError}</Notice> : null}
           <DialogFooter>
-            <Button type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
+            <ActionButton intent="outline" disabled={busy} onClick={() => onOpenChange(false)}>
               Cancelar
-            </Button>
-            <Button type="submit" disabled={busy}>
+            </ActionButton>
+            <ActionButton type="submit" disabled={busy}>
               Salvar
-            </Button>
+            </ActionButton>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -335,9 +323,9 @@ function QrPreview({ item }: { item: QrCode }) {
           ) : null}
         </div>
         <DialogFooter>
-          <Button className="rounded-sm px-2" type="button" onClick={download} disabled={!src}>
+          <ActionButton intent="outline" onClick={download} disabled={!src}>
             Baixar imagem
-          </Button>
+          </ActionButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

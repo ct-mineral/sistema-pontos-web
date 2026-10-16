@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { AdminPage, EmptyRow, Field, Notice, Toolbar } from "@/components/admin/page-frame";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/form/action-button";
+import { TextField } from "@/components/form/text-field";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -98,19 +98,10 @@ export function AdjustmentsBoard() {
         }}
       >
         <Toolbar>
-          <Field label="Filtrar matrícula" htmlFor="adjustment-filter">
-            <Input
-              className="rounded-sm"
-              id="adjustment-filter"
-              value={filter}
-              onChange={(event) => setFilter(event.target.value)}
-              autoCapitalize="none"
-              autoCorrect="off"
-            />
-          </Field>
-          <Button className="rounded-sm" type="submit" disabled={loading}>
+          <TextField id="adjustment-filter" placeholder="Informe a matrícula" label="Filtrar matrícula" value={filter} onValueChange={setFilter} />
+          <ActionButton type="submit" disabled={loading}>
             Aplicar
-          </Button>
+          </ActionButton>
         </Toolbar>
       </form>
       <CreateAdjustmentForm
@@ -165,18 +156,12 @@ export function AdjustmentsBoard() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setEditing(item)}>
+                      <ActionButton size="sm" intent="outline" disabled={busy} onClick={() => setEditing(item)}>
                         Editar
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="destructive"
-                        disabled={busy}
-                        onClick={() => setRemoving(item)}
-                      >
+                      </ActionButton>
+                      <ActionButton size="sm" intent="danger" disabled={busy} onClick={() => setRemoving(item)}>
                         Excluir
-                      </Button>
+                      </ActionButton>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -306,16 +291,12 @@ function EditAdjustmentDialog({
             })();
           }}
         >
-          <Field label="Matrícula" htmlFor="edit-adjustment-enrollment">
-            <Input
-              className="rounded-sm"
-              id="edit-adjustment-enrollment"
-              value={enrollment}
-              onChange={(event) => setEnrollment(event.target.value)}
-              autoCapitalize="none"
-              autoCorrect="off"
-            />
-          </Field>
+          <TextField
+            id="edit-adjustment-enrollment"
+            label="Matrícula"
+            value={enrollment}
+            onValueChange={setEnrollment}
+          />
           <Field label="Grupo" htmlFor="edit-adjustment-group">
             <Select value={groupId || null} onValueChange={(value) => setGroupId(value ?? "")}>
               <SelectTrigger id="edit-adjustment-group" className="w-full">
@@ -331,51 +312,19 @@ function EditAdjustmentDialog({
             </Select>
           </Field>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Entrada" htmlFor="edit-adjustment-start">
-              <Input
-                className="rounded-sm"
-                id="edit-adjustment-start"
-                type="time"
-                value={startTime}
-                onChange={(event) => setStartTime(event.target.value)}
-              />
-            </Field>
-            <Field label="Saída" htmlFor="edit-adjustment-end">
-              <Input
-                className="rounded-sm"
-                id="edit-adjustment-end"
-                type="time"
-                value={endTime}
-                onChange={(event) => setEndTime(event.target.value)}
-              />
-            </Field>
-            <Field label="Início" htmlFor="edit-adjustment-from">
-              <Input
-                className="rounded-sm"
-                id="edit-adjustment-from"
-                type="date"
-                value={startDate}
-                onChange={(event) => setStartDate(event.target.value)}
-              />
-            </Field>
-            <Field label="Fim" htmlFor="edit-adjustment-to">
-              <Input
-                className="rounded-sm"
-                id="edit-adjustment-to"
-                type="date"
-                value={endDate}
-                onChange={(event) => setEndDate(event.target.value)}
-              />
-            </Field>
+            <TextField id="edit-adjustment-start" label="Entrada" type="time" value={startTime} onValueChange={setStartTime} />
+            <TextField id="edit-adjustment-end" label="Saída" type="time" value={endTime} onValueChange={setEndTime} />
+            <TextField id="edit-adjustment-from" label="Início" type="date" value={startDate} onValueChange={setStartDate} />
+            <TextField id="edit-adjustment-to" label="Fim" type="date" value={endDate} onValueChange={setEndDate} />
           </div>
           {formError ? <Notice tone="error">{formError}</Notice> : null}
           <DialogFooter>
-            <Button className="rounded-sm px-2" type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
+            <ActionButton intent="outline" disabled={busy} onClick={() => onOpenChange(false)}>
               Cancelar
-            </Button>
-            <Button className="rounded-sm" type="submit" disabled={busy}>
+            </ActionButton>
+            <ActionButton type="submit" disabled={busy}>
               Salvar
-            </Button>
+            </ActionButton>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -440,17 +389,13 @@ function CreateAdjustmentForm({
       }}
     >
       <Toolbar>
-        <Field label="Matrícula" htmlFor="adjustment-enrollment">
-          <Input
-            className="rounded-sm"
-            id="adjustment-enrollment"
-            value={enrollment}
-            onChange={(event) => setEnrollment(event.target.value)}
-            autoCapitalize="none"
-            autoCorrect="off"
-            placeholder="Informe a matrícula"
-          />
-        </Field>
+        <TextField
+          id="adjustment-enrollment"
+          label="Matrícula"
+          value={enrollment}
+          onValueChange={setEnrollment}
+          placeholder="Informe a matrícula"
+        />
         <Field label="Grupo" htmlFor="adjustment-group">
           <Select value={groupId || null} onValueChange={(value) => setGroupId(value ?? "")}>
             <SelectTrigger className="rounded-sm w-52" id="adjustment-group">
@@ -465,27 +410,13 @@ function CreateAdjustmentForm({
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Entrada" htmlFor="adjustment-start">
-          <Input
-            className="rounded-sm"
-            id="adjustment-start"
-            type="time"
-            value={startTime}
-            onChange={(event) => setStartTime(event.target.value)}
-          />
-        </Field>
-        <Field label="Saída" htmlFor="adjustment-end">
-          <Input className="rounded-sm" id="adjustment-end" type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
-        </Field>
-        <Field label="Início" htmlFor="adjustment-from">
-          <Input className="rounded-sm" id="adjustment-from" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-        </Field>
-        <Field label="Fim" htmlFor="adjustment-to">
-          <Input className="rounded-sm" id="adjustment-to" type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
-        </Field>
-        <Button className="rounded-sm" type="submit" disabled={busy}>
+        <TextField id="adjustment-start" label="Entrada" type="time" value={startTime} onValueChange={setStartTime} />
+        <TextField id="adjustment-end" label="Saída" type="time" value={endTime} onValueChange={setEndTime} />
+        <TextField id="adjustment-from" label="Início" type="date" value={startDate} onValueChange={setStartDate} />
+        <TextField id="adjustment-to" label="Fim" type="date" value={endDate} onValueChange={setEndDate} />
+        <ActionButton type="submit" disabled={busy}>
           Cadastrar ajuste
-        </Button>
+        </ActionButton>
       </Toolbar>
       {formError ? <Notice tone="error">{formError}</Notice> : null}
     </form>

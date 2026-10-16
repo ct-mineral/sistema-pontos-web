@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AdminPage, EmptyRow, Field, Notice } from "@/components/admin/page-frame";
+import { AdminPage, EmptyRow, Notice } from "@/components/admin/page-frame";
+import { ActionButton } from "@/components/form/action-button";
+import { TextField } from "@/components/form/text-field";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -140,18 +140,16 @@ export function JustificationsBoard() {
                     {open ? (
                       <div className="flex flex-col items-start gap-2">
                         <div className="flex gap-2">
-                          <Button
+                          <ActionButton
                             size="sm"
-                            className="rounded-sm"
                             disabled={busyId === item.id || own}
                             onClick={() => void decide(item.id, "APROVADA")}
                           >
                             Aprovar
-                          </Button>
-                          <Button
+                          </ActionButton>
+                          <ActionButton
                             size="sm"
-                            variant="outline"
-                            className="rounded-sm"
+                            intent="outline"
                             disabled={busyId === item.id || own}
                             onClick={() => {
                               setMakeupDate("");
@@ -160,16 +158,15 @@ export function JustificationsBoard() {
                             }}
                           >
                             Aprovar parcialmente
-                          </Button>
-                          <Button
+                          </ActionButton>
+                          <ActionButton
                             size="sm"
-                            variant="destructive"
-                            className="rounded-sm"
+                            intent="danger"
                             disabled={busyId === item.id || own}
                             onClick={() => void decide(item.id, "RECUSADA")}
                           >
                             Recusar
-                          </Button>
+                          </ActionButton>
                         </div>
                         {own ? (
                           <p className="text-xs text-muted-foreground">
@@ -210,33 +207,22 @@ export function JustificationsBoard() {
               void decide(partial.id, "APROVADA_PARCIAL", { makeupDate, makeupStart });
             }}
           >
-            <Field label="Data" htmlFor="makeup-date">
-              <Input
-                id="makeup-date"
-                type="date"
-                className="rounded-sm"
-                value={makeupDate}
-                onChange={(event) => setMakeupDate(event.target.value)}
-                required
-              />
-            </Field>
-            <Field label="Horário de início" htmlFor="makeup-start">
-              <Input
-                id="makeup-start"
-                type="time"
-                className="rounded-sm"
-                value={makeupStart}
-                onChange={(event) => setMakeupStart(event.target.value)}
-                required
-              />
-            </Field>
+            <TextField id="makeup-date" label="Data" type="date" value={makeupDate} onValueChange={setMakeupDate} required />
+            <TextField
+              id="makeup-start"
+              label="Horário de início"
+              type="time"
+              value={makeupStart}
+              onValueChange={setMakeupStart}
+              required
+            />
             <DialogFooter>
-              <Button type="button" variant="outline" className="rounded-sm" onClick={() => setPartial(null)}>
+              <ActionButton intent="outline" onClick={() => setPartial(null)}>
                 Cancelar
-              </Button>
-              <Button type="submit" className="rounded-sm" disabled={busyId === partial?.id}>
+              </ActionButton>
+              <ActionButton type="submit" disabled={busyId === partial?.id}>
                 Confirmar
-              </Button>
+              </ActionButton>
             </DialogFooter>
           </form>
         </DialogContent>

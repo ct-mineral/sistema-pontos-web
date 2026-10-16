@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/form/action-button";
 import {
   Dialog,
   DialogContent,
@@ -33,12 +33,12 @@ export function ConfirmDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
+          <ActionButton intent="outline" disabled={busy} onClick={() => onOpenChange(false)}>
             Cancelar
-          </Button>
-          <Button type="button" variant="destructive" disabled={busy} onClick={onConfirm}>
+          </ActionButton>
+          <ActionButton intent="danger" disabled={busy} onClick={onConfirm}>
             Excluir
-          </Button>
+          </ActionButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

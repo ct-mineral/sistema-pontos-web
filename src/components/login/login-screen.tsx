@@ -5,7 +5,7 @@ import { useEffect, type ReactNode } from "react";
 import { BrandMark } from "@/components/login/brand-mark";
 import { LoginHero } from "@/components/login/login-hero";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/form/action-button";
 import { API_ORIGIN, logout, ROLE_LABEL } from "@/lib/api";
 import { useSession } from "@/lib/use-session";
 
@@ -28,13 +28,9 @@ export function LoginScreen() {
             title="Acesso restrito"
             description={`Somente servidores administram esta área. A matrícula ${user.suapEnrollment} entrou como ${ROLE_LABEL[user.role]}.`}
             action={
-              <Button
-                type="button"
-                className="h-10 w-full rounded-sm"
-                onClick={() => void logout()}
-              >
+              <ActionButton className="h-10 w-full" onClick={() => void logout()}>
                 Sair
-              </Button>
+              </ActionButton>
             }
           />
         ) : (
@@ -44,13 +40,13 @@ export function LoginScreen() {
             notice={error}
             footnote="O acesso depende de uma conta autorizada no sistema."
             action={
-              <Button
-                className="h-10 w-full rounded-sm"
+              <ActionButton
+                className="h-10 w-full"
                 nativeButton={false}
                 render={<a href={`${API_ORIGIN}/api/auth/suap`} />}
               >
                 Entrar com SUAP
-              </Button>
+              </ActionButton>
             }
           />
         )}
