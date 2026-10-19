@@ -36,7 +36,9 @@ import { JustificationBadge } from "@/components/admin/justifications-board";
 import {
   fetchPeriodByEnrollment,
   fetchSummaryByEnrollment,
+  ALLOWANCE_LABEL,
   type DayActivity,
+  type DayAllowance,
   type DayJustification,
   type DaySummary,
   type GroupHours,
@@ -170,7 +172,7 @@ export function LookupBoard() {
                   <TableCell className="font-medium">{formatDay(day.date)}</TableCell>
                   <TableCell colSpan={5}>Nenhum grupo com horário neste dia.</TableCell>
                   <TableCell>
-                    <JustificationMarks items={day.justifications ?? []} />
+                    <DayNotes day={day} />
                   </TableCell>
                   <TableCell>
                     <DayDescriptions
@@ -190,7 +192,7 @@ export function LookupBoard() {
                     <TableCell>{minutesLabel(group.expectedMinutes)}</TableCell>
                     <TableCell>{minutesLabel(group.remainingMinutes)}</TableCell>
                     <TableCell>
-                      {index === 0 ? <JustificationMarks items={day.justifications ?? []} /> : null}
+                      {index === 0 ? <DayNotes day={day} /> : null}
                     </TableCell>
                     <TableCell>
                       {index === 0 ? (
@@ -299,10 +301,50 @@ function DayDescriptions({
   );
 }
 
-function JustificationMarks({ items }: { items: DayJustification[] }) {
-  if (items.length === 0) {
+function DayNotes({ day }: { day: DaySummary }) {
+  const justifications = day.justifications ?? [];
+  const allowances = day.allowances ?? [];
+  if (justifications.length === 0 && allowances.length === 0) {
     return <span className="text-sm text-muted-foreground">—</span>;
   }
+  return (
+    <div className="space-y-3">
+      <JustificationMarks items={justifications} />
+      <AllowanceMarks items={allowances} />
+    </div>
+  );
+}
+
+function AllowanceMarks({ items }: { items: DayAllowance[] }) {
+  if (items.length === 0) return null;
+  return (
+    <ul className="space-y-2">
+      {items.map((item) => (
+        <li key={item.id} className="space-y-1">
+          <p className="text-sm font-medium">
+            Abono {ALLOWANCE_LABEL[item.status]} · {minutesLabel(item.minutes)}
+          </p>
+          <p className="text-xs text-muted-foreground">{item.groupName}</p>
+          <p className="max-w-xs whitespace-pre-wrap text-sm">{item.reason}</p>
+          {(item.documents ?? []).map((document) => (
+            <a
+              key={document.id}
+              className="block text-sm underline"
+              href={`/api/time-records/allowances/${item.id}/documents/${document.id}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {document.fileName}
+            </a>
+          ))}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function JustificationMarks({ items }: { items: DayJustification[] }) {
+  if (items.length === 0) return null;
 
   return (
     <ul className="space-y-2">

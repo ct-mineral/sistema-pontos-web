@@ -77,6 +77,45 @@ export type EarlyExitJustification = {
   reviewedAt: string | null;
 };
 
+export type AllowanceStatus = "PENDENTE" | "APROVADO" | "RECUSADO";
+
+export const ALLOWANCE_LABEL: Record<AllowanceStatus, string> = {
+  PENDENTE: "Pendente",
+  APROVADO: "Aprovado",
+  RECUSADO: "Recusado",
+};
+
+export type AllowanceDocument = {
+  id: string;
+  fileName: string;
+};
+
+export type DayAllowance = {
+  id: string;
+  groupId: string;
+  groupName: string;
+  minutes: number;
+  reason: string;
+  status: AllowanceStatus;
+  documents?: AllowanceDocument[];
+};
+
+export type TimeAllowance = {
+  id: string;
+  userId: string;
+  suapEnrollment: string;
+  name: string | null;
+  groupId: string;
+  groupName: string;
+  day: string;
+  minutes: number;
+  reason: string;
+  status: AllowanceStatus;
+  documents?: AllowanceDocument[];
+  reviewerName: string | null;
+  reviewedAt: string | null;
+};
+
 export type GroupHours = {
   id: string | null;
   name: string;
@@ -96,6 +135,7 @@ export type DaySummary = {
   groups: GroupHours[];
   activities: DayActivity[];
   justifications: DayJustification[];
+  allowances: DayAllowance[];
 };
 
 export type PeriodSummary = {
@@ -243,6 +283,21 @@ export function fetchSummaryByEnrollment(suapEnrollment: string) {
   return getJson<DaySummary>(
     `/api/time-records/summary-by-user?${query.toString()}`,
     "Não foi possível consultar o dia.",
+  );
+}
+
+export function listAllowances() {
+  return getJson<TimeAllowance[]>(
+    "/api/time-records/allowances",
+    "Não foi possível carregar os abonos.",
+  );
+}
+
+export function reviewAllowance(id: string, status: "APROVADO" | "RECUSADO") {
+  return postJson<TimeAllowance>(
+    "/api/time-records/allowances/review",
+    { id, status },
+    "Não foi possível analisar o abono.",
   );
 }
 
