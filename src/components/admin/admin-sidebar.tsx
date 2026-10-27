@@ -52,7 +52,7 @@ export function AdminSidebar({ user }: { user: SessionUser }) {
                   <SidebarMenuItem key={route.href} className="py-1">
                     <SidebarMenuButton
                       className="rounded-sm"
-                      isActive={pathname === route.href}
+                      isActive={pathname === route.href || pathname.startsWith(`${route.href}/`)}
                       tooltip={route.label}
                       render={<Link href={route.href} />}
                     >

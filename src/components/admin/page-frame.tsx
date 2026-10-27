@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -7,14 +9,25 @@ import { TableCell, TableRow } from "@/components/ui/table";
 export function AdminPage({
   title,
   description,
+  back,
   children,
 }: {
   title: string;
   description: string;
+  back?: { href: string; label: string };
   children: ReactNode;
 }) {
   return (
     <section className="flex flex-1 flex-col gap-6 p-6 md:p-8">
+      {back ? (
+        <Link
+          href={back.href}
+          className="-mb-2 inline-flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          {back.label}
+        </Link>
+      ) : null}
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         <p className="max-w-3xl text-sm text-muted-foreground">{description}</p>

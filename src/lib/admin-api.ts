@@ -15,6 +15,8 @@ export type Group = {
   status: boolean;
   members: number;
   people: GroupPerson[];
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type QrCode = {

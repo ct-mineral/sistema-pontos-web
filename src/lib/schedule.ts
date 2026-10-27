@@ -53,3 +53,36 @@ export function formatTime(value: string) {
     minute: "2-digit",
   }).format(new Date(value));
 }
+
+export function formatDateTime(value: string | null | undefined) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Fortaleza",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+export function shiftLabel(startTime: string | null) {
+  if (!startTime) return null;
+  const hours = Number(startTime.slice(0, 2));
+  if (Number.isNaN(hours)) return null;
+  if (hours < 12) return "Manhã";
+  if (hours < 18) return "Tarde";
+  return "Noite";
+}
+
+export function peopleCountLabel(count: number) {
+  if (count === 0) return "Nenhuma pessoa";
+  if (count === 1) return "1 pessoa";
+  return `${count} pessoas`;
+}
+
+export function scheduleRange(start: string | null, end: string | null) {
+  return start && end ? `${start}–${end}` : "Horário não definido";
+}
