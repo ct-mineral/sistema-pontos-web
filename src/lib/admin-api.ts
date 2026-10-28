@@ -43,6 +43,14 @@ export type DayActivity = {
   description: string | null;
 };
 
+export type DayInterval = {
+  entryAt: string | null;
+  exitAt: string | null;
+  groupId: string | null;
+  description: string | null;
+  refused: boolean;
+};
+
 export type JustificationStatus = "PENDENTE" | "APROVADA" | "APROVADA_PARCIAL" | "RECUSADA";
 
 export const JUSTIFICATION_LABEL: Record<JustificationStatus, string> = {
@@ -60,6 +68,7 @@ export type DayJustification = {
   makeupDate: string | null;
   makeupStart: string | null;
   makeupEnd: string | null;
+  groupId?: string | null;
 };
 
 export type EarlyExitJustification = {
@@ -136,6 +145,7 @@ export type DaySummary = {
   remainingMinutes: number | null;
   groups: GroupHours[];
   activities: DayActivity[];
+  intervals?: DayInterval[];
   justifications: DayJustification[];
   allowances: DayAllowance[];
 };

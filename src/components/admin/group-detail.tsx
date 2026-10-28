@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { ActivityReportDialog } from "@/components/admin/activity-report-dialog";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { GroupScheduleDialog } from "@/components/admin/group-schedule-dialog";
 import { AdminPage, EmptyRow, Notice, StatusBadge, Toolbar } from "@/components/admin/page-frame";
@@ -39,6 +40,7 @@ export function GroupDetail() {
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [reportFor, setReportFor] = useState<GroupPerson | null>(null);
 
   async function reload() {
     setGroups(await listGroups());
@@ -174,26 +176,36 @@ export function GroupDetail() {
                   <TableCell>{person.suapEnrollment}</TableCell>
                   <TableCell>{roleLabel(person.role)}</TableCell>
                   <TableCell className="text-right">
-                    <ActionButton
-                      size="sm"
-                      intent="danger-soft"
-                      disabled={busy}
-                      onClick={() => {
-                        setBusy(true);
-                        setNotice(null);
-                        unassignGroup(person.suapEnrollment, group.id)
-                          .then(async () => {
-                            await reload();
-                            setNotice({ tone: "ok", text: "Usuário removido do grupo." });
-                          })
-                          .catch((caught: unknown) => {
-                            setNotice({ tone: "error", text: messageOf(caught, "Não foi possível remover a matrícula do grupo.") });
-                          })
-                          .finally(() => setBusy(false));
-                      }}
-                    >
-                      Remover
-                    </ActionButton>
+                    <div className="flex justify-end gap-2">
+                      <ActionButton
+                        size="sm"
+                        intent="outline"
+                        disabled={busy}
+                        onClick={() => setReportFor(person)}
+                      >
+                        Relatório
+                      </ActionButton>
+                      <ActionButton
+                        size="sm"
+                        intent="danger-soft"
+                        disabled={busy}
+                        onClick={() => {
+                          setBusy(true);
+                          setNotice(null);
+                          unassignGroup(person.suapEnrollment, group.id)
+                            .then(async () => {
+                              await reload();
+                              setNotice({ tone: "ok", text: "Usuário removido do grupo." });
+                            })
+                            .catch((caught: unknown) => {
+                              setNotice({ tone: "error", text: messageOf(caught, "Não foi possível remover a matrícula do grupo.") });
+                            })
+                            .finally(() => setBusy(false));
+                        }}
+                      >
+                        Remover
+                      </ActionButton>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -224,6 +236,15 @@ export function GroupDetail() {
             } finally {
               setBusy(false);
             }
+          }}
+        />
+      ) : null}
+      {reportFor ? (
+        <ActivityReportDialog
+          person={reportFor}
+          group={group}
+          onOpenChange={(open) => {
+            if (!open) setReportFor(null);
           }}
         />
       ) : null}
