@@ -7,7 +7,7 @@ import { LoginHero } from "@/components/login/login-hero";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ActionButton } from "@/components/form/action-button";
 import { canOpenPanel } from "@/lib/access";
-import { API_ORIGIN, logout, ROLE_LABEL } from "@/lib/api";
+import { logout, ROLE_LABEL } from "@/lib/api";
 import { useSession } from "@/lib/use-session";
 
 export function LoginScreen() {
@@ -44,7 +44,7 @@ export function LoginScreen() {
               <ActionButton
                 className="h-10 w-full"
                 nativeButton={false}
-                render={<a href={`${API_ORIGIN}/api/auth/suap`} />}
+                render={<a href="/api/auth/suap" />}
               >
                 Entrar com SUAP
               </ActionButton>
