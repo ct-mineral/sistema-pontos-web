@@ -19,12 +19,13 @@ import {
   type AllowanceStatus,
   type TimeAllowance,
 } from "@/lib/admin-api";
+import { useCanManage, usePanelUser } from "@/components/admin/panel-user";
 import { ApiError } from "@/lib/api";
 import { formatDay, minutesLabel } from "@/lib/schedule";
-import { useSession } from "@/lib/use-session";
 
 export function AllowancesBoard() {
-  const { user } = useSession();
+  const user = usePanelUser();
+  const manage = useCanManage();
   const [items, setItems] = useState<TimeAllowance[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -76,7 +77,11 @@ export function AllowancesBoard() {
   return (
     <AdminPage
       title="Abonos"
-      description="Horas que faltaram num dia. Outro servidor aprova ou recusa o pedido."
+      description={
+        manage
+          ? "Horas que faltaram num dia. Outro servidor aprova ou recusa o pedido."
+          : "Horas que faltaram num dia. Esta conta consulta os pedidos e não aprova nem recusa."
+      }
     >
       {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
       <Table>
@@ -116,7 +121,7 @@ export function AllowancesBoard() {
                     <AllowanceBadge status={item.status} />
                   </TableCell>
                   <TableCell>
-                    {open ? (
+                    {open && manage ? (
                       <div className="flex flex-col items-start gap-2">
                         <div className="flex gap-2">
                           <ActionButton
@@ -141,6 +146,8 @@ export function AllowancesBoard() {
                           </p>
                         ) : null}
                       </div>
+                    ) : open ? (
+                      <p className="text-sm text-muted-foreground">Aguardando análise</p>
                     ) : (
                       <p className="text-sm text-muted-foreground">{item.reviewerName ?? "Analisado"}</p>
                     )}

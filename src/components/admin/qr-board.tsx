@@ -32,9 +32,11 @@ import {
   updateQrCodeStatus,
   type QrCode,
 } from "@/lib/admin-api";
+import { useCanManage } from "@/components/admin/panel-user";
 import { ApiError } from "@/lib/api";
 
 export function QrBoard() {
+  const manage = useCanManage();
   const [codes, setCodes] = useState<QrCode[]>([]);
   const [location, setLocation] = useState("");
   const [loading, setLoading] = useState(true);
@@ -49,6 +51,10 @@ export function QrBoard() {
   }
 
   useEffect(() => {
+    if (!manage) {
+      setLoading(false);
+      return;
+    }
     let active = true;
     listQrCodes()
       .then((rows) => {
@@ -63,7 +69,7 @@ export function QrBoard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [manage]);
 
   async function create() {
     if (!location.trim()) {
@@ -126,6 +132,17 @@ export function QrBoard() {
     }
   }
 
+  if (!manage) {
+    return (
+      <AdminPage
+        title="QR codes"
+        description="O código libera a batida de ponto. Esta conta não consulta nem baixa QR codes."
+      >
+        <p className="text-sm text-muted-foreground">Peça a um servidor para cuidar dos QR codes.</p>
+      </AdminPage>
+    );
+  }
+
   return (
     <AdminPage
       title="QR codes"
@@ -171,7 +188,7 @@ export function QrBoard() {
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{item.location}</TableCell>
                 <TableCell>
-                  <QrPreview item={item} />
+                  <QrPreview item={item} canDownload />
                 </TableCell>
                 <TableCell>
                   <StatusBadge active={item.status} />
@@ -283,7 +300,7 @@ function EditQrDialog({
   );
 }
 
-function QrPreview({ item }: { item: QrCode }) {
+function QrPreview({ item, canDownload }: { item: QrCode; canDownload: boolean }) {
   const [open, setOpen] = useState(false);
   const [src, setSrc] = useState<string | null>(null);
 
@@ -322,11 +339,13 @@ function QrPreview({ item }: { item: QrCode }) {
             />
           ) : null}
         </div>
-        <DialogFooter>
-          <ActionButton intent="outline" onClick={download} disabled={!src}>
-            Baixar imagem
-          </ActionButton>
-        </DialogFooter>
+        {canDownload ? (
+          <DialogFooter>
+            <ActionButton intent="outline" onClick={download} disabled={!src}>
+              Baixar imagem
+            </ActionButton>
+          </DialogFooter>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

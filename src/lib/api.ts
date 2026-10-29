@@ -6,6 +6,7 @@ export type SessionUser = {
   name: string | null;
   photo: string | null;
   role: UserRole;
+  viewer: boolean;
 };
 
 export type ManagedUser = {
@@ -14,6 +15,7 @@ export type ManagedUser = {
   name: string | null;
   role: UserRole | null;
   status: boolean;
+  viewer: boolean;
 };
 
 export const ROLE_LABEL: Record<UserRole, string> = {
@@ -83,6 +85,14 @@ export function updateEnrollment(id: string, suapEnrollment: string) {
     "/api/users/update",
     { id, suapEnrollment },
     "Não foi possível editar a matrícula.",
+  );
+}
+
+export function updateEnrollmentViewer(suapEnrollment: string, viewer: boolean) {
+  return postJson<ManagedUser>(
+    "/api/users/update-viewer",
+    { suapEnrollment, viewer },
+    "Não foi possível atualizar o acesso de consulta.",
   );
 }
 

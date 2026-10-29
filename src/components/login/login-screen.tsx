@@ -6,22 +6,23 @@ import { BrandMark } from "@/components/login/brand-mark";
 import { LoginHero } from "@/components/login/login-hero";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ActionButton } from "@/components/form/action-button";
+import { canOpenPanel } from "@/lib/access";
 import { API_ORIGIN, logout, ROLE_LABEL } from "@/lib/api";
 import { useSession } from "@/lib/use-session";
 
 export function LoginScreen() {
   const router = useRouter();
   const { user, phase, error } = useSession();
-  const isStaff = user?.role === "SERVIDOR";
+  const allowed = canOpenPanel(user);
 
   useEffect(() => {
-    if (phase === "ready" && isStaff) router.replace("/admin/matriculas");
-  }, [isStaff, phase, router]);
+    if (phase === "ready" && allowed) router.replace("/admin/matriculas");
+  }, [allowed, phase, router]);
 
   return (
     <main className="flex min-h-dvh flex-col bg-background text-foreground lg:h-dvh lg:flex-row lg:overflow-hidden">
       <section className="flex min-h-dvh flex-1 items-center justify-center px-4 py-6 lg:min-h-0 lg:px-6">
-        {phase === "loading" || isStaff ? (
+        {phase === "loading" || allowed ? (
           <p className="text-sm text-muted-foreground">Carregando sessão…</p>
         ) : user ? (
           <LoginPanel

@@ -38,10 +38,12 @@ import {
   type Group,
   type WorkloadAdjustment,
 } from "@/lib/admin-api";
+import { useCanManage } from "@/components/admin/panel-user";
 import { ApiError } from "@/lib/api";
 import { formatDay, formatSchedule, fortalezaToday } from "@/lib/schedule";
 
 export function AdjustmentsBoard() {
+  const manage = useCanManage();
   const [items, setItems] = useState<WorkloadAdjustment[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [filter, setFilter] = useState("");
@@ -83,7 +85,11 @@ export function AdjustmentsBoard() {
   return (
     <AdminPage
       title="Ajustes de carga"
-      description="O horário vale para o grupo escolhido. A data final é opcional. Sem ela, o ajuste segue em aberto."
+      description={
+        manage
+          ? "O horário vale para o grupo escolhido. A data final é opcional. Sem ela, o ajuste segue em aberto."
+          : "Horários especiais por matrícula. Esta conta só consulta os ajustes."
+      }
     >
       <form
         onSubmit={(event) => {
@@ -104,23 +110,25 @@ export function AdjustmentsBoard() {
           </ActionButton>
         </Toolbar>
       </form>
-      <CreateAdjustmentForm
-        groups={groups.filter((group) => group.status)}
-        busy={busy}
-        onSubmit={async (input) => {
-          setBusy(true);
-          setNotice(null);
-          try {
-            await createAdjustment(input);
-            await reload();
-            setNotice({ tone: "ok", text: "Ajuste cadastrado." });
-          } catch (caught) {
-            setNotice({ tone: "error", text: messageOf(caught, "Não foi possível cadastrar o ajuste.") });
-          } finally {
-            setBusy(false);
-          }
-        }}
-      />
+      {manage ? (
+        <CreateAdjustmentForm
+          groups={groups.filter((group) => group.status)}
+          busy={busy}
+          onSubmit={async (input) => {
+            setBusy(true);
+            setNotice(null);
+            try {
+              await createAdjustment(input);
+              await reload();
+              setNotice({ tone: "ok", text: "Ajuste cadastrado." });
+            } catch (caught) {
+              setNotice({ tone: "error", text: messageOf(caught, "Não foi possível cadastrar o ajuste.") });
+            } finally {
+              setBusy(false);
+            }
+          }}
+        />
+      ) : null}
       {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
       <Table>
         <TableHeader>
@@ -131,14 +139,14 @@ export function AdjustmentsBoard() {
             <TableHead>Início</TableHead>
             <TableHead>Fim</TableHead>
             <TableHead>Situação</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
+            {manage ? <TableHead className="text-right">Ações</TableHead> : null}
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
-            <EmptyRow colSpan={7}>Carregando ajustes…</EmptyRow>
+            <EmptyRow colSpan={manage ? 7 : 6}>Carregando ajustes…</EmptyRow>
           ) : items.length === 0 ? (
-            <EmptyRow colSpan={7}>Nenhum ajuste cadastrado.</EmptyRow>
+            <EmptyRow colSpan={manage ? 7 : 6}>Nenhum ajuste cadastrado.</EmptyRow>
           ) : (
             items.map((item) => {
               const state = adjustmentState(item, today);
@@ -154,16 +162,18 @@ export function AdjustmentsBoard() {
                       {state === "open" ? "Em aberto" : state === "scheduled" ? "Agendado" : "Encerrado"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <ActionButton size="sm" intent="outline" disabled={busy} onClick={() => setEditing(item)}>
-                        Editar
-                      </ActionButton>
-                      <ActionButton size="sm" intent="danger" disabled={busy} onClick={() => setRemoving(item)}>
-                        Excluir
-                      </ActionButton>
-                    </div>
-                  </TableCell>
+                  {manage ? (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <ActionButton size="sm" intent="outline" disabled={busy} onClick={() => setEditing(item)}>
+                          Editar
+                        </ActionButton>
+                        <ActionButton size="sm" intent="danger" disabled={busy} onClick={() => setRemoving(item)}>
+                          Excluir
+                        </ActionButton>
+                      </div>
+                    </TableCell>
+                  ) : null}
                 </TableRow>
               );
             })

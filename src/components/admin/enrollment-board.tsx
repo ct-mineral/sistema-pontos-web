@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -27,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useCanManage, usePanelUser } from "@/components/admin/panel-user";
 import {
   ApiError,
   authorizeEnrollment,
@@ -35,10 +37,10 @@ import {
   ROLE_LABEL,
   updateEnrollment,
   updateEnrollmentStatus,
+  updateEnrollmentViewer,
   type ManagedUser,
   type UserRole,
 } from "@/lib/api";
-import { useSession } from "@/lib/use-session";
 
 export function EnrollmentBoard() {
   const [users, setUsers] = useState<ManagedUser[]>([]);
@@ -47,7 +49,8 @@ export function EnrollmentBoard() {
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<ManagedUser | null>(null);
   const [removing, setRemoving] = useState<ManagedUser | null>(null);
-  const { user: session } = useSession();
+  const session = usePanelUser();
+  const manage = useCanManage();
 
   useEffect(() => {
     let active = true;
@@ -81,6 +84,21 @@ export function EnrollmentBoard() {
     }
   }
 
+  async function changeViewer(user: ManagedUser, viewer: boolean) {
+    setPendingId(user.id);
+    setLoadError(null);
+    try {
+      const next = await updateEnrollmentViewer(user.suapEnrollment, viewer);
+      setUsers((current) =>
+        current.map((item) => (item.id === next.id ? next : item)),
+      );
+    } catch (caught) {
+      setLoadError(messageOf(caught));
+    } finally {
+      setPendingId(null);
+    }
+  }
+
   async function remove(user: ManagedUser) {
     setPendingId(user.id);
     setLoadError(null);
@@ -99,16 +117,22 @@ export function EnrollmentBoard() {
   return (
     <AdminPage
       title="Matrículas"
-      description="Autorize uma matrícula para liberar o acesso. O papel vem do SUAP no primeiro login e aparece na tabela."
+      description={
+        manage
+          ? "Autorize a matrícula para o aplicativo. Libere a consulta para quem não é servidor olhar o painel e baixar relatórios, sem aprovar ou excluir."
+          : "Pessoas autorizadas no sistema. Esta conta consulta a lista e não altera matrículas."
+      }
     >
-      <AuthorizeForm
-        onCreated={(created) =>
-          setUsers((current) => [
-            created,
-            ...current.filter((item) => item.id !== created.id),
-          ])
-        }
-      />
+      {manage ? (
+        <AuthorizeForm
+          onCreated={(created) =>
+            setUsers((current) => [
+              created,
+              ...current.filter((item) => item.id !== created.id),
+            ])
+          }
+        />
+      ) : null}
       {loadError ? <Notice tone="error">{loadError}</Notice> : null}
       <Table>
         <TableHeader>
@@ -116,15 +140,16 @@ export function EnrollmentBoard() {
             <TableHead>Matrícula</TableHead>
             <TableHead>Nome</TableHead>
             <TableHead>Papel</TableHead>
+            <TableHead>Painel</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
+            {manage ? <TableHead className="text-right">Ações</TableHead> : null}
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
-            <EmptyRow colSpan={5}>Carregando matrículas…</EmptyRow>
+            <EmptyRow colSpan={manage ? 6 : 5}>Carregando matrículas…</EmptyRow>
           ) : users.length === 0 ? (
-            <EmptyRow colSpan={5}>Nenhuma matrícula autorizada.</EmptyRow>
+            <EmptyRow colSpan={manage ? 6 : 5}>Nenhuma matrícula autorizada.</EmptyRow>
           ) : (
             users.map((user) => (
               <TableRow key={user.id}>
@@ -134,38 +159,53 @@ export function EnrollmentBoard() {
                 <TableCell>{user.name?.trim() || "—"}</TableCell>
                 <TableCell>{labelOf(user.role)}</TableCell>
                 <TableCell>
+                  <PanelBadge user={user} />
+                </TableCell>
+                <TableCell>
                   <StatusBadge active={user.status} off="Desativado" />
                 </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <ActionButton
-                      size="sm"
-                      intent={user.status ? "outline" : "primary"}
-                      disabled={pendingId === user.id}
-                      onClick={() => void changeStatus(user, !user.status)}
-                    >
-                      {user.status ? "Desativar" : "Ativar"}
-                    </ActionButton>
-                    <ActionButton
-                      size="sm"
-                      intent="outline"
-                      disabled={pendingId === user.id}
-                      onClick={() => setEditing(user)}
-                    >
-                      Editar
-                    </ActionButton>
-                    {session?.id === user.id ? null : (
+                {manage ? (
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      {user.role === "SERVIDOR" ? null : (
+                        <ActionButton
+                          size="sm"
+                          intent={user.viewer ? "outline" : "primary"}
+                          disabled={pendingId === user.id}
+                          onClick={() => void changeViewer(user, !user.viewer)}
+                        >
+                          {user.viewer ? "Revogar consulta" : "Liberar consulta"}
+                        </ActionButton>
+                      )}
                       <ActionButton
                         size="sm"
-                        intent="danger"
+                        intent={user.status ? "outline" : "primary"}
                         disabled={pendingId === user.id}
-                        onClick={() => setRemoving(user)}
+                        onClick={() => void changeStatus(user, !user.status)}
                       >
-                        Excluir
+                        {user.status ? "Desativar" : "Ativar"}
                       </ActionButton>
-                    )}
-                  </div>
-                </TableCell>
+                      <ActionButton
+                        size="sm"
+                        intent="outline"
+                        disabled={pendingId === user.id}
+                        onClick={() => setEditing(user)}
+                      >
+                        Editar
+                      </ActionButton>
+                      {session?.id === user.id ? null : (
+                        <ActionButton
+                          size="sm"
+                          intent="danger"
+                          disabled={pendingId === user.id}
+                          onClick={() => setRemoving(user)}
+                        >
+                          Excluir
+                        </ActionButton>
+                      )}
+                    </div>
+                  </TableCell>
+                ) : null}
               </TableRow>
             ))
           )}
@@ -326,6 +366,12 @@ function EditEnrollmentDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+function PanelBadge({ user }: { user: ManagedUser }) {
+  if (user.role === "SERVIDOR") return <Badge variant="secondary">Administração</Badge>;
+  if (user.viewer) return <Badge>Consulta</Badge>;
+  return <Badge variant="outline">Só aplicativo</Badge>;
 }
 
 function labelOf(role: string | null) {

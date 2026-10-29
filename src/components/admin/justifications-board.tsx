@@ -28,12 +28,13 @@ import {
   type EarlyExitJustification,
   type JustificationStatus,
 } from "@/lib/admin-api";
+import { useCanManage, usePanelUser } from "@/components/admin/panel-user";
 import { ApiError } from "@/lib/api";
 import { formatDay, formatTime } from "@/lib/schedule";
-import { useSession } from "@/lib/use-session";
 
 export function JustificationsBoard() {
-  const { user } = useSession();
+  const user = usePanelUser();
+  const manage = useCanManage();
   const [items, setItems] = useState<EarlyExitJustification[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -98,7 +99,11 @@ export function JustificationsBoard() {
   return (
     <AdminPage
       title="Justificativas"
-      description="Saídas feitas antes do fim do grupo. Outro servidor precisa aprovar ou recusar o motivo."
+      description={
+        manage
+          ? "Saídas feitas antes do fim do grupo. Outro servidor precisa aprovar ou recusar o motivo."
+          : "Saídas feitas antes do fim do grupo. Esta conta consulta a situação e não aprova nem recusa."
+      }
     >
       {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
       <Table>
@@ -137,7 +142,7 @@ export function JustificationsBoard() {
                     <JustificationBadge status={item.status} />
                   </TableCell>
                   <TableCell>
-                    {open ? (
+                    {open && manage ? (
                       <div className="flex flex-col items-start gap-2">
                         <div className="flex gap-2">
                           <ActionButton
@@ -174,6 +179,8 @@ export function JustificationsBoard() {
                           </p>
                         ) : null}
                       </div>
+                    ) : open ? (
+                      <p className="text-sm text-muted-foreground">Aguardando análise</p>
                     ) : item.status === "APROVADA_PARCIAL" && item.makeupDate && item.makeupStart && item.makeupEnd ? (
                       <p className="text-sm text-muted-foreground">
                         Acerto em {formatDay(item.makeupDate)}, das {item.makeupStart} às {item.makeupEnd}

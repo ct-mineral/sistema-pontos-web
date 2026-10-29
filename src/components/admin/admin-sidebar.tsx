@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ClipboardCheck, ClockPlus, IdCard, LogOut, QrCode, Search, SlidersHorizontal, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { canManage } from "@/lib/access";
 import { logout, type SessionUser } from "@/lib/api";
 import { ActionButton } from "@/components/form/action-button";
 import {
@@ -20,10 +21,10 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
-export const ADMIN_ROUTES: { href: string; label: string; icon: LucideIcon }[] = [
+export const ADMIN_ROUTES: { href: string; label: string; icon: LucideIcon; manageOnly?: boolean }[] = [
   { href: "/admin/matriculas", label: "Matrículas", icon: IdCard },
   { href: "/admin/grupos", label: "Grupos", icon: Users },
-  { href: "/admin/qr-codes", label: "QR Codes", icon: QrCode },
+  { href: "/admin/qr-codes", label: "QR Codes", icon: QrCode, manageOnly: true },
   { href: "/admin/ajustes", label: "Ajustes de carga", icon: SlidersHorizontal },
   { href: "/admin/justificativas", label: "Justificativas", icon: ClipboardCheck },
   { href: "/admin/abonos", label: "Abonos", icon: ClockPlus },
@@ -32,21 +33,22 @@ export const ADMIN_ROUTES: { href: string; label: string; icon: LucideIcon }[] =
 
 export function AdminSidebar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
+  const manage = canManage(user);
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="px-2 py-1 group-data-[collapsible=icon]:hidden">
           <p className="text-sm font-semibold text-primary">Sistema de pontos</p>
-          <p className="text-xs text-muted-foreground">Administração</p>
+          <p className="text-xs text-muted-foreground">{manage ? "Administração" : "Consulta"}</p>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Gestão</SidebarGroupLabel>
+          <SidebarGroupLabel>{manage ? "Gestão" : "Consulta"}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {ADMIN_ROUTES.map((route) => {
+              {ADMIN_ROUTES.filter((route) => manage || !route.manageOnly).map((route) => {
                 const Icon = route.icon;
                 return (
                   <SidebarMenuItem key={route.href} className="py-1">
@@ -68,7 +70,9 @@ export function AdminSidebar({ user }: { user: SessionUser }) {
       </SidebarContent>
       <SidebarFooter>
         <div className="px-2 group-data-[collapsible=icon]:hidden">
-          <p className="truncate text-sm font-medium">{user.name?.trim() || "Servidor"}</p>
+          <p className="truncate text-sm font-medium">
+            {user.name?.trim() || (manage ? "Servidor" : "Consulta")}
+          </p>
           <p className="truncate text-xs text-muted-foreground">{user.suapEnrollment}</p>
         </div>
         <ActionButton intent="danger-solid" onClick={() => void logout()}>

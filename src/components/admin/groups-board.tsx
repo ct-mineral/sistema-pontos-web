@@ -8,10 +8,12 @@ import { AdminPage, Notice, StatusBadge } from "@/components/admin/page-frame";
 import { ActionButton } from "@/components/form/action-button";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { createGroup, listGroups, type Group } from "@/lib/admin-api";
+import { useCanManage } from "@/components/admin/panel-user";
 import { ApiError } from "@/lib/api";
 import { formatMinutes, peopleCountLabel, scheduleRange, shiftLabel } from "@/lib/schedule";
 
 export function GroupsBoard() {
+  const manage = useCanManage();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState<NoticeState | null>(null);
@@ -40,11 +42,13 @@ export function GroupsBoard() {
       title="Grupos"
       description="Escolha um grupo para ver o horário, a carga diária e as pessoas vinculadas."
     >
-      <div className="flex justify-end">
-        <ActionButton disabled={busy} onClick={() => setCreating(true)}>
-          Cadastrar grupo
-        </ActionButton>
-      </div>
+      {manage ? (
+        <div className="flex justify-end">
+          <ActionButton disabled={busy} onClick={() => setCreating(true)}>
+            Cadastrar grupo
+          </ActionButton>
+        </div>
+      ) : null}
       {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
       {loading ? (
         <p className="text-sm text-muted-foreground">Carregando grupos…</p>

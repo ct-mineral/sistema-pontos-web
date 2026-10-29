@@ -27,6 +27,7 @@ import {
   type Group,
   type GroupPerson,
 } from "@/lib/admin-api";
+import { useCanManage } from "@/components/admin/panel-user";
 import { ApiError, ROLE_LABEL } from "@/lib/api";
 import { formatDateTime, formatMinutes, peopleCountLabel, scheduleRange, shiftLabel } from "@/lib/schedule";
 
@@ -34,6 +35,7 @@ export function GroupDetail() {
   const params = useParams<{ id: string }>();
   const groupId = params.id;
   const router = useRouter();
+  const manage = useCanManage();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState<NoticeState | null>(null);
@@ -108,17 +110,19 @@ export function GroupDetail() {
       description="Horário, carga diária e pessoas vinculadas a este grupo."
       back={{ href: "/admin/grupos", label: "Grupos" }}
     >
-      <div className="flex flex-wrap gap-2">
-        <ActionButton intent="outline" disabled={busy} onClick={() => setEditing(true)}>
-          Editar
-        </ActionButton>
-        <ActionButton intent={group.status ? "outline" : "primary"} disabled={busy} onClick={() => void changeStatus()}>
-          {group.status ? "Desativar" : "Ativar"}
-        </ActionButton>
-        <ActionButton intent="danger" disabled={busy} onClick={() => setRemoving(true)}>
-          Excluir
-        </ActionButton>
-      </div>
+      {manage ? (
+        <div className="flex flex-wrap gap-2">
+          <ActionButton intent="outline" disabled={busy} onClick={() => setEditing(true)}>
+            Editar
+          </ActionButton>
+          <ActionButton intent={group.status ? "outline" : "primary"} disabled={busy} onClick={() => void changeStatus()}>
+            {group.status ? "Desativar" : "Ativar"}
+          </ActionButton>
+          <ActionButton intent="danger" disabled={busy} onClick={() => setRemoving(true)}>
+            Excluir
+          </ActionButton>
+        </div>
+      ) : null}
       {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Fact label="Entrada e saída" value={scheduleRange(group.startTime, group.endTime)} />
@@ -136,27 +140,29 @@ export function GroupDetail() {
             {peopleCountLabel(group.people.length)} neste grupo. Uma matrícula pode participar de vários grupos, um por turno.
           </p>
         </header>
-        {group.status ? (
-          <MembershipForm
-            busy={busy}
-            onAssign={async (enrollment) => {
-              setBusy(true);
-              setNotice(null);
-              try {
-                await assignGroup(enrollment, group.id);
-                await reload();
-                setNotice({ tone: "ok", text: "Usuário vinculado ao grupo." });
-              } catch (caught) {
-                setNotice({ tone: "error", text: messageOf(caught, "Não foi possível vincular a matrícula.") });
-                throw caught;
-              } finally {
-                setBusy(false);
-              }
-            }}
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground">Ative o grupo para vincular novas matrículas.</p>
-        )}
+        {manage ? (
+          group.status ? (
+            <MembershipForm
+              busy={busy}
+              onAssign={async (enrollment) => {
+                setBusy(true);
+                setNotice(null);
+                try {
+                  await assignGroup(enrollment, group.id);
+                  await reload();
+                  setNotice({ tone: "ok", text: "Usuário vinculado ao grupo." });
+                } catch (caught) {
+                  setNotice({ tone: "error", text: messageOf(caught, "Não foi possível vincular a matrícula.") });
+                  throw caught;
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">Ative o grupo para vincular novas matrículas.</p>
+          )
+        ) : null}
         <Table>
           <TableHeader>
             <TableRow>
@@ -185,26 +191,28 @@ export function GroupDetail() {
                       >
                         Relatório
                       </ActionButton>
-                      <ActionButton
-                        size="sm"
-                        intent="danger-soft"
-                        disabled={busy}
-                        onClick={() => {
-                          setBusy(true);
-                          setNotice(null);
-                          unassignGroup(person.suapEnrollment, group.id)
-                            .then(async () => {
-                              await reload();
-                              setNotice({ tone: "ok", text: "Usuário removido do grupo." });
-                            })
-                            .catch((caught: unknown) => {
-                              setNotice({ tone: "error", text: messageOf(caught, "Não foi possível remover a matrícula do grupo.") });
-                            })
-                            .finally(() => setBusy(false));
-                        }}
-                      >
-                        Remover
-                      </ActionButton>
+                      {manage ? (
+                        <ActionButton
+                          size="sm"
+                          intent="danger-soft"
+                          disabled={busy}
+                          onClick={() => {
+                            setBusy(true);
+                            setNotice(null);
+                            unassignGroup(person.suapEnrollment, group.id)
+                              .then(async () => {
+                                await reload();
+                                setNotice({ tone: "ok", text: "Usuário removido do grupo." });
+                              })
+                              .catch((caught: unknown) => {
+                                setNotice({ tone: "error", text: messageOf(caught, "Não foi possível remover a matrícula do grupo.") });
+                              })
+                              .finally(() => setBusy(false));
+                          }}
+                        >
+                          Remover
+                        </ActionButton>
+                      ) : null}
                     </div>
                   </TableCell>
                 </TableRow>
