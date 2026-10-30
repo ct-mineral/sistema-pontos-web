@@ -44,7 +44,7 @@ export function LoginScreen() {
               <ActionButton
                 className="h-10 w-full"
                 nativeButton={false}
-                render={<a href={`${API_ORIGIN}/api/auth/suap`} />}
+                render={<a href="/api/auth/suap" />}
               >
                 Entrar com SUAP
               </ActionButton>
