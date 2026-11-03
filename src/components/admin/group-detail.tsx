@@ -126,6 +126,7 @@ export function GroupDetail() {
       {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Fact label="Entrada e saída" value={scheduleRange(group.startTime, group.endTime)} />
+        <Fact label="Intervalo" value={group.breakStartTime && group.breakEndTime ? `${group.breakStartTime}–${group.breakEndTime}` : "Não informado"} />
         <Fact label="Carga diária" value={`${formatMinutes(group.dailyWorkloadMinutes)} por dia`} />
         <Fact label="Turno" value={shift ?? "—"} />
         <Fact label="Status" value={<StatusBadge active={group.status} />} />
@@ -225,11 +226,13 @@ export function GroupDetail() {
         <GroupScheduleDialog
           key={group.id}
           title="Editar grupo"
-          description="Altere o nome e o horário deste grupo."
+          description="Altere o horário de trabalho e o intervalo deste grupo."
           initial={{
             name: group.name,
             startTime: group.startTime ?? "08:00",
             endTime: group.endTime ?? "12:00",
+            breakStartTime: group.breakStartTime ?? "",
+            breakEndTime: group.breakEndTime ?? "",
           }}
           busy={busy}
           submitLabel="Salvar"
@@ -237,7 +240,7 @@ export function GroupDetail() {
           onSave={async (input) => {
             setBusy(true);
             try {
-              await updateGroup(group.id, input.name, input.startTime, input.endTime);
+              await updateGroup(group.id, input.name, input.startTime, input.endTime, input.breakStartTime, input.breakEndTime);
               await reload();
               setEditing(false);
               setNotice({ tone: "ok", text: "Grupo atualizado." });

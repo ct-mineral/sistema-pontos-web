@@ -66,8 +66,8 @@ export function GroupsBoard() {
       {creating ? (
         <GroupScheduleDialog
           title="Cadastrar grupo"
-          description="Informe o nome e o horário de entrada e saída."
-          initial={{ name: "", startTime: "08:00", endTime: "12:00" }}
+          description="Informe o horário de trabalho e, se houver, o intervalo."
+          initial={{ name: "", startTime: "08:00", endTime: "12:00", breakStartTime: "", breakEndTime: "" }}
           busy={busy}
           submitLabel="Cadastrar"
           onOpenChange={() => setCreating(false)}
@@ -75,7 +75,7 @@ export function GroupsBoard() {
             setBusy(true);
             setNotice(null);
             try {
-              const created = await createGroup(input.name, input.startTime, input.endTime);
+              const created = await createGroup(input.name, input.startTime, input.endTime, input.breakStartTime, input.breakEndTime);
               setGroups((current) => [created, ...current.filter((group) => group.id !== created.id)]);
               setCreating(false);
               setNotice({ tone: "ok", text: "Grupo cadastrado." });
@@ -113,6 +113,7 @@ function GroupCard({ group }: { group: Group }) {
         <CardContent className="text-muted-foreground">
           {formatMinutes(group.dailyWorkloadMinutes)} por dia
           {shift ? ` · ${shift}` : ""}
+          {group.breakStartTime && group.breakEndTime ? ` · intervalo ${group.breakStartTime}–${group.breakEndTime}` : ""}
         </CardContent>
         <CardFooter>
           <div className="flex flex-col items-start gap-1 text-sm">

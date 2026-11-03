@@ -41,7 +41,7 @@ export function activityReportFileName(enrollment: string, month: string) {
 
 export function buildActivityReport(input: {
   person: GroupPerson;
-  group: Pick<Group, "id" | "name" | "startTime" | "endTime" | "dailyWorkloadMinutes">;
+  group: Pick<Group, "id" | "name" | "startTime" | "endTime" | "breakStartTime" | "breakEndTime" | "dailyWorkloadMinutes">;
   period: PeriodSummary;
   issuedAt: string;
 }) {
@@ -84,6 +84,7 @@ export function buildActivityReport(input: {
     <tr><th>Papel</th><td>${escapeHtml(role)}</td></tr>
     <tr><th>Grupo</th><td>${escapeHtml(group.name)}</td></tr>
     <tr><th>Horário do grupo</th><td>${escapeHtml(scheduleRange(group.startTime, group.endTime))}</td></tr>
+    <tr><th>Intervalo</th><td>${escapeHtml(group.breakStartTime && group.breakEndTime ? `${group.breakStartTime}–${group.breakEndTime}` : "Não informado")}</td></tr>
     <tr><th>Carga diária</th><td>${escapeHtml(formatMinutes(group.dailyWorkloadMinutes))}</td></tr>
     <tr><th>Período</th><td>${escapeHtml(formatDay(period.from))} a ${escapeHtml(formatDay(period.to))}</td></tr>
     <tr><th>Emitido em</th><td>${escapeHtml(formatDateTime(issuedAt))}</td></tr>

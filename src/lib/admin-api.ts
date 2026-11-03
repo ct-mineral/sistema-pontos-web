@@ -14,6 +14,8 @@ export type Group = {
   endTime: string | null;
   status: boolean;
   members: number;
+  breakStartTime: string | null;
+  breakEndTime: string | null;
   people: GroupPerson[];
   createdAt: string;
   updatedAt: string;
@@ -51,7 +53,11 @@ export type DayInterval = {
   refused: boolean;
 };
 
-export type JustificationStatus = "PENDENTE" | "APROVADA" | "APROVADA_PARCIAL" | "RECUSADA";
+export type JustificationStatus =
+  | "PENDENTE"
+  | "APROVADA"
+  | "APROVADA_PARCIAL"
+  | "RECUSADA";
 
 export const JUSTIFICATION_LABEL: Record<JustificationStatus, string> = {
   PENDENTE: "Pendente",
@@ -132,6 +138,8 @@ export type GroupHours = {
   name: string;
   startTime: string | null;
   endTime: string | null;
+  breakStartTime: string | null;
+  breakEndTime: string | null;
   workedMinutes: number;
   expectedMinutes: number | null;
   remainingMinutes: number | null;
@@ -161,13 +169,22 @@ export type PeriodSummary = {
 };
 
 export function listGroups() {
-  return getJson<Group[]>("/api/groups/list", "Não foi possível carregar os grupos.");
+  return getJson<Group[]>(
+    "/api/groups/list",
+    "Não foi possível carregar os grupos.",
+  );
 }
 
-export function createGroup(name: string, startTime: string, endTime: string) {
+export function createGroup(
+  name: string,
+  startTime: string,
+  endTime: string,
+  breakStartTime: string,
+  breakEndTime: string,
+) {
   return postJson<Group>(
     "/api/groups/create",
-    { name, startTime, endTime },
+    { name, startTime, endTime, breakStartTime: breakStartTime || undefined, breakEndTime: breakEndTime || undefined },
     "Não foi possível cadastrar o grupo.",
   );
 }
@@ -188,10 +205,17 @@ export function unassignGroup(suapEnrollment: string, groupId: string) {
   );
 }
 
-export function updateGroup(id: string, name: string, startTime: string, endTime: string) {
+export function updateGroup(
+  id: string,
+  name: string,
+  startTime: string,
+  endTime: string,
+  breakStartTime: string,
+  breakEndTime: string,
+) {
   return postJson<Group>(
     "/api/groups/update",
-    { id, name, startTime, endTime },
+    { id, name, startTime, endTime, breakStartTime: breakStartTime || undefined, breakEndTime: breakEndTime || undefined },
     "Não foi possível editar o grupo.",
   );
 }
@@ -213,7 +237,10 @@ export function deleteGroup(id: string) {
 }
 
 export function listQrCodes() {
-  return getJson<QrCode[]>("/api/qr-codes/list", "Não foi possível carregar os QR codes.");
+  return getJson<QrCode[]>(
+    "/api/qr-codes/list",
+    "Não foi possível carregar os QR codes.",
+  );
 }
 
 export function createQrCode(location: string) {
@@ -254,7 +281,10 @@ export function listAdjustments(suapEnrollment?: string) {
   const path = query.size
     ? `/api/workload-adjustments/list?${query.toString()}`
     : "/api/workload-adjustments/list";
-  return getJson<WorkloadAdjustment[]>(path, "Não foi possível carregar os ajustes.");
+  return getJson<WorkloadAdjustment[]>(
+    path,
+    "Não foi possível carregar os ajustes.",
+  );
 }
 
 export function createAdjustment(input: AdjustmentInput) {
@@ -332,7 +362,11 @@ export function reviewJustification(
   );
 }
 
-export function fetchPeriodByEnrollment(suapEnrollment: string, from: string, to: string) {
+export function fetchPeriodByEnrollment(
+  suapEnrollment: string,
+  from: string,
+  to: string,
+) {
   const query = new URLSearchParams({ suapEnrollment, from, to });
   return getJson<PeriodSummary>(
     `/api/time-records/period-by-user?${query.toString()}`,
