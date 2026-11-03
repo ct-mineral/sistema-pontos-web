@@ -18,6 +18,8 @@ export type GroupScheduleInput = {
   name: string;
   startTime: string;
   endTime: string;
+  breakStartTime: string;
+  breakEndTime: string;
 };
 
 export function GroupScheduleDialog({
@@ -40,6 +42,8 @@ export function GroupScheduleDialog({
   const [name, setName] = useState(initial.name);
   const [startTime, setStartTime] = useState(initial.startTime);
   const [endTime, setEndTime] = useState(initial.endTime);
+  const [breakStartTime, setBreakStartTime] = useState(initial.breakStartTime);
+  const [breakEndTime, setBreakEndTime] = useState(initial.breakEndTime);
   const [formError, setFormError] = useState<string | null>(null);
 
   return (
@@ -61,9 +65,17 @@ export function GroupScheduleDialog({
               setFormError("A saída precisa ser depois da entrada.");
               return;
             }
+            if (Boolean(breakStartTime) !== Boolean(breakEndTime)) {
+              setFormError("Informe o início e o fim do intervalo.");
+              return;
+            }
+            if (breakStartTime && breakEndTime && (breakStartTime <= startTime || breakEndTime >= endTime || breakEndTime <= breakStartTime)) {
+              setFormError("O intervalo precisa estar entre a entrada e a saída.");
+              return;
+            }
             setFormError(null);
             try {
-              await onSave({ name: name.trim(), startTime, endTime });
+              await onSave({ name: name.trim(), startTime, endTime, breakStartTime, breakEndTime });
             } catch (caught) {
               setFormError(caught instanceof ApiError ? caught.message : "Não foi possível salvar o grupo.");
             }
@@ -71,6 +83,8 @@ export function GroupScheduleDialog({
         >
           <TextField id="group-schedule-name" label="Nome" value={name} onValueChange={setName} placeholder="Informe o nome do grupo" />
           <TextField id="group-schedule-start" label="Entrada" type="time" value={startTime} onValueChange={setStartTime} />
+          <TextField id="group-schedule-break-start" label="Início do intervalo (opcional)" type="time" value={breakStartTime} onValueChange={setBreakStartTime} />
+          <TextField id="group-schedule-break-end" label="Fim do intervalo (opcional)" type="time" value={breakEndTime} onValueChange={setBreakEndTime} />
           <TextField id="group-schedule-end" label="Saída" type="time" value={endTime} onValueChange={setEndTime} />
           {formError ? <Notice tone="error">{formError}</Notice> : null}
           <DialogFooter>

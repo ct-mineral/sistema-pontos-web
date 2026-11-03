@@ -27,7 +27,7 @@ export function ActivityReportDialog({
   onOpenChange,
 }: {
   person: GroupPerson;
-  group: Pick<Group, "id" | "name" | "startTime" | "endTime" | "dailyWorkloadMinutes">;
+  group: Pick<Group, "id" | "name" | "startTime" | "endTime" | "breakStartTime" | "breakEndTime" | "dailyWorkloadMinutes">;
   onOpenChange: (open: boolean) => void;
 }) {
   const currentMonth = fortalezaToday().slice(0, 7);
