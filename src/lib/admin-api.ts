@@ -69,6 +69,7 @@ export const JUSTIFICATION_LABEL: Record<JustificationStatus, string> = {
 export type DayJustification = {
   recordedAt: string;
   scheduledEnd: string;
+  missingMinutes?: number | null;
   reason: string | null;
   status: JustificationStatus;
   makeupDate: string | null;
@@ -85,6 +86,7 @@ export type EarlyExitJustification = {
   groupName: string | null;
   recordedAt: string;
   scheduledEnd: string;
+  missingMinutes?: number | null;
   reason: string | null;
   status: JustificationStatus;
   makeupDate: string | null;

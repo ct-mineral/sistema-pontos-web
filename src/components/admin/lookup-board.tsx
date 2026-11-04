@@ -47,6 +47,7 @@ import {
 import { ApiError } from "@/lib/api";
 import {
   formatDay,
+  formatMinutes,
   formatTime,
   fortalezaToday,
   minutesLabel,
@@ -352,7 +353,8 @@ function JustificationMarks({ items }: { items: DayJustification[] }) {
         <li key={`${item.recordedAt}-${item.status}`} className="space-y-1">
           <JustificationBadge status={item.status} />
           <p className="text-xs text-muted-foreground">
-            Saída {formatTime(item.recordedAt)} · previsto {item.scheduledEnd}
+            Saída {formatTime(item.recordedAt)} · fim do turno {item.scheduledEnd}
+            {item.missingMinutes != null ? ` · faltante ${formatMinutes(item.missingMinutes)}` : ""}
           </p>
           <p className="max-w-xs whitespace-pre-wrap text-sm">
             {item.reason?.trim() || "Aguardando motivo"}

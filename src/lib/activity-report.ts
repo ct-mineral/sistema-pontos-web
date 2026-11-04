@@ -185,7 +185,8 @@ function justificationText(item: DayJustification) {
     item.makeupDate && item.makeupStart && item.makeupEnd
       ? ` Acerto em ${formatDay(item.makeupDate)}, das ${item.makeupStart} às ${item.makeupEnd}.`
       : "";
-  return `Saída antecipada ${JUSTIFICATION_LABEL[item.status]} às ${formatTime(item.recordedAt)}, previsto ${item.scheduledEnd}. ${item.reason?.trim() || "Aguardando motivo."}${makeup}`;
+  const missing = item.missingMinutes != null ? ` Faltante: ${minutesLabel(item.missingMinutes)}.` : "";
+  return `Carga incompleta ${JUSTIFICATION_LABEL[item.status]} às ${formatTime(item.recordedAt)}, fim do turno ${item.scheduledEnd}.${missing} ${item.reason?.trim() || "Aguardando motivo."}${makeup}`;
 }
 
 function allowanceText(item: DayAllowance) {
