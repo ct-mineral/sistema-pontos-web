@@ -30,7 +30,7 @@ import {
 } from "@/lib/admin-api";
 import { useCanManage, usePanelUser } from "@/components/admin/panel-user";
 import { ApiError } from "@/lib/api";
-import { formatDay, formatTime } from "@/lib/schedule";
+import { formatDay, formatMinutes, formatTime } from "@/lib/schedule";
 
 export function JustificationsBoard() {
   const user = usePanelUser();
@@ -101,8 +101,8 @@ export function JustificationsBoard() {
       title="Justificativas"
       description={
         manage
-          ? "Saídas feitas antes do fim do grupo. Outro servidor precisa aprovar ou recusar o motivo."
-          : "Saídas feitas antes do fim do grupo. Esta conta consulta a situação e não aprova nem recusa."
+          ? "Cargas horárias incompletas. Outro servidor precisa aprovar ou recusar o motivo."
+          : "Cargas horárias incompletas. Esta conta consulta a situação e não aprova nem recusa."
       }
     >
       {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
@@ -113,7 +113,8 @@ export function JustificationsBoard() {
             <TableHead>Nome</TableHead>
             <TableHead>Grupo</TableHead>
             <TableHead>Saída</TableHead>
-            <TableHead>Fim previsto</TableHead>
+            <TableHead>Fim do turno</TableHead>
+            <TableHead>Faltante</TableHead>
             <TableHead>Motivo</TableHead>
             <TableHead>Situação</TableHead>
             <TableHead>Análise</TableHead>
@@ -123,7 +124,7 @@ export function JustificationsBoard() {
           {loading ? (
             <EmptyRow colSpan={8}>Carregando justificativas…</EmptyRow>
           ) : rows.length === 0 ? (
-            <EmptyRow colSpan={8}>Nenhuma saída antecipada registrada.</EmptyRow>
+            <EmptyRow colSpan={9}>Nenhuma justificativa de carga incompleta.</EmptyRow>
           ) : (
             rows.map((item) => {
               const own = user?.id === item.userId;
@@ -135,6 +136,7 @@ export function JustificationsBoard() {
                   <TableCell>{item.groupName ?? "Sem grupo"}</TableCell>
                   <TableCell>{formatTime(item.recordedAt)}</TableCell>
                   <TableCell>{item.scheduledEnd}</TableCell>
+                  <TableCell>{item.missingMinutes != null ? formatMinutes(item.missingMinutes) : "—"}</TableCell>
                   <TableCell className="max-w-xs whitespace-pre-wrap">
                     {item.reason?.trim() || "Aguardando motivo"}
                   </TableCell>
@@ -202,8 +204,8 @@ export function JustificationsBoard() {
           <DialogHeader>
             <DialogTitle>Aprovar parcialmente</DialogTitle>
             <DialogDescription>
-              Informe o dia e o horário em que as horas restantes serão cumpridas. O fim é calculado a
-              partir da saída.
+              Informe o dia e o horário em que os minutos faltantes serão cumpridos. O fim é calculado
+              a partir da carga pendente.
             </DialogDescription>
           </DialogHeader>
           <form
