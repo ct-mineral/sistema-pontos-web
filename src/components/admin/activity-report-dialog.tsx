@@ -12,7 +12,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { fetchPeriodByEnrollment, type Group, type GroupPerson } from "@/lib/admin-api";
+import {
+  fetchPeriodByEnrollment,
+  type Group,
+  type GroupPerson,
+} from "@/lib/admin-api";
 import {
   activityReportFileName,
   buildActivityReport,
@@ -27,7 +31,16 @@ export function ActivityReportDialog({
   onOpenChange,
 }: {
   person: GroupPerson;
-  group: Pick<Group, "id" | "name" | "startTime" | "endTime" | "breakStartTime" | "breakEndTime" | "dailyWorkloadMinutes">;
+  group: Pick<
+    Group,
+    | "id"
+    | "name"
+    | "startTime"
+    | "endTime"
+    | "breakStartTime"
+    | "breakEndTime"
+    | "dailyWorkloadMinutes"
+  >;
   onOpenChange: (open: boolean) => void;
 }) {
   const currentMonth = fortalezaToday().slice(0, 7);
@@ -56,7 +69,11 @@ export function ActivityReportDialog({
     setBusy(true);
     setError(null);
     try {
-      const period = await fetchPeriodByEnrollment(person.suapEnrollment, bounds.from, to);
+      const period = await fetchPeriodByEnrollment(
+        person.suapEnrollment,
+        bounds.from,
+        to,
+      );
       const html = buildActivityReport({
         person,
         group,
@@ -72,7 +89,11 @@ export function ActivityReportDialog({
       URL.revokeObjectURL(url);
       onOpenChange(false);
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Não foi possível gerar o relatório.");
+      setError(
+        caught instanceof ApiError
+          ? caught.message
+          : "Não foi possível gerar o relatório.",
+      );
     } finally {
       setBusy(false);
     }
@@ -84,7 +105,9 @@ export function ActivityReportDialog({
         <DialogHeader>
           <DialogTitle>Relatório de atividades</DialogTitle>
           <DialogDescription>
-            Baixe o mês de trabalho de {name} no grupo {group.name}. O arquivo reúne matrícula, horários de entrada e saída e as atividades de cada dia.
+            Baixe o mês de trabalho de {name} no grupo {group.name}. O arquivo
+            reúne matrícula, horários de entrada e saída e as atividades de cada
+            dia.
           </DialogDescription>
         </DialogHeader>
         <Field label="Mês" htmlFor="activity-report-month">
@@ -99,7 +122,11 @@ export function ActivityReportDialog({
         </Field>
         {error ? <Notice tone="error">{error}</Notice> : null}
         <DialogFooter>
-          <ActionButton intent="outline" disabled={busy} onClick={() => onOpenChange(false)}>
+          <ActionButton
+            intent="outline"
+            disabled={busy}
+            onClick={() => onOpenChange(false)}
+          >
             Cancelar
           </ActionButton>
           <ActionButton disabled={busy} onClick={() => void download()}>

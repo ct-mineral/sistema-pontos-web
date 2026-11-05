@@ -186,7 +186,13 @@ export function createGroup(
 ) {
   return postJson<Group>(
     "/api/groups/create",
-    { name, startTime, endTime, breakStartTime: breakStartTime || undefined, breakEndTime: breakEndTime || undefined },
+    {
+      name,
+      startTime,
+      endTime,
+      breakStartTime: breakStartTime || undefined,
+      breakEndTime: breakEndTime || undefined,
+    },
     "Não foi possível cadastrar o grupo.",
   );
 }
@@ -217,7 +223,14 @@ export function updateGroup(
 ) {
   return postJson<Group>(
     "/api/groups/update",
-    { id, name, startTime, endTime, breakStartTime: breakStartTime || undefined, breakEndTime: breakEndTime || undefined },
+    {
+      id,
+      name,
+      startTime,
+      endTime,
+      breakStartTime: breakStartTime || undefined,
+      breakEndTime: breakEndTime || undefined,
+    },
     "Não foi possível editar o grupo.",
   );
 }

@@ -6,11 +6,24 @@ import { Clock, Users } from "lucide-react";
 import { GroupScheduleDialog } from "@/components/admin/group-schedule-dialog";
 import { AdminPage, Notice, StatusBadge } from "@/components/admin/page-frame";
 import { ActionButton } from "@/components/form/action-button";
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { createGroup, listGroups, type Group } from "@/lib/admin-api";
 import { useCanManage } from "@/components/admin/panel-user";
 import { ApiError } from "@/lib/api";
-import { formatMinutes, peopleCountLabel, scheduleRange, shiftLabel } from "@/lib/schedule";
+import {
+  formatMinutes,
+  peopleCountLabel,
+  scheduleRange,
+  shiftLabel,
+} from "@/lib/schedule";
 
 export function GroupsBoard() {
   const manage = useCanManage();
@@ -27,7 +40,11 @@ export function GroupsBoard() {
         if (active) setGroups(rows);
       })
       .catch((caught: unknown) => {
-        if (active) setNotice({ tone: "error", text: messageOf(caught, "Não foi possível carregar os grupos.") });
+        if (active)
+          setNotice({
+            tone: "error",
+            text: messageOf(caught, "Não foi possível carregar os grupos."),
+          });
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -67,7 +84,13 @@ export function GroupsBoard() {
         <GroupScheduleDialog
           title="Cadastrar grupo"
           description="Informe o horário de trabalho e, se houver, o intervalo."
-          initial={{ name: "", startTime: "08:00", endTime: "12:00", breakStartTime: "", breakEndTime: "" }}
+          initial={{
+            name: "",
+            startTime: "08:00",
+            endTime: "12:00",
+            breakStartTime: "",
+            breakEndTime: "",
+          }}
           busy={busy}
           submitLabel="Cadastrar"
           onOpenChange={() => setCreating(false)}
@@ -75,8 +98,17 @@ export function GroupsBoard() {
             setBusy(true);
             setNotice(null);
             try {
-              const created = await createGroup(input.name, input.startTime, input.endTime, input.breakStartTime, input.breakEndTime);
-              setGroups((current) => [created, ...current.filter((group) => group.id !== created.id)]);
+              const created = await createGroup(
+                input.name,
+                input.startTime,
+                input.endTime,
+                input.breakStartTime,
+                input.breakEndTime,
+              );
+              setGroups((current) => [
+                created,
+                ...current.filter((group) => group.id !== created.id),
+              ]);
               setCreating(false);
               setNotice({ tone: "ok", text: "Grupo cadastrado." });
             } finally {
@@ -91,7 +123,9 @@ export function GroupsBoard() {
 
 function GroupCard({ group }: { group: Group }) {
   const shift = shiftLabel(group.startTime);
-  const preview = group.people.slice(0, 3).map((person) => person.name?.trim() || person.suapEnrollment);
+  const preview = group.people
+    .slice(0, 3)
+    .map((person) => person.name?.trim() || person.suapEnrollment);
   const extra = group.people.length - preview.length;
 
   return (
@@ -113,7 +147,9 @@ function GroupCard({ group }: { group: Group }) {
         <CardContent className="text-muted-foreground">
           {formatMinutes(group.dailyWorkloadMinutes)} por dia
           {shift ? ` · ${shift}` : ""}
-          {group.breakStartTime && group.breakEndTime ? ` · intervalo ${group.breakStartTime}–${group.breakEndTime}` : ""}
+          {group.breakStartTime && group.breakEndTime
+            ? ` · intervalo ${group.breakStartTime}–${group.breakEndTime}`
+            : ""}
         </CardContent>
         <CardFooter>
           <div className="flex flex-col items-start gap-1 text-sm">
