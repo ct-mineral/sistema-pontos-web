@@ -90,6 +90,7 @@ export function GroupsBoard() {
             endTime: "12:00",
             breakStartTime: "",
             breakEndTime: "",
+            autoPunchTime: "",
           }}
           busy={busy}
           submitLabel="Cadastrar"
@@ -104,6 +105,7 @@ export function GroupsBoard() {
                 input.endTime,
                 input.breakStartTime,
                 input.breakEndTime,
+                input.autoPunchTime,
               );
               setGroups((current) => [
                 created,
@@ -150,6 +152,7 @@ function GroupCard({ group }: { group: Group }) {
           {group.breakStartTime && group.breakEndTime
             ? ` · intervalo ${group.breakStartTime}–${group.breakEndTime}`
             : ""}
+          {group.autoPunchTime ? ` · saída automática ${group.autoPunchTime}` : ""}
         </CardContent>
         <CardFooter>
           <div className="flex flex-col items-start gap-1 text-sm">

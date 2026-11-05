@@ -20,6 +20,7 @@ export type GroupScheduleInput = {
   endTime: string;
   breakStartTime: string;
   breakEndTime: string;
+  autoPunchTime: string;
 };
 
 export function GroupScheduleDialog({
@@ -44,6 +45,7 @@ export function GroupScheduleDialog({
   const [endTime, setEndTime] = useState(initial.endTime);
   const [breakStartTime, setBreakStartTime] = useState(initial.breakStartTime);
   const [breakEndTime, setBreakEndTime] = useState(initial.breakEndTime);
+  const [autoPunchTime, setAutoPunchTime] = useState(initial.autoPunchTime);
   const [formError, setFormError] = useState<string | null>(null);
 
   return (
@@ -81,6 +83,10 @@ export function GroupScheduleDialog({
               );
               return;
             }
+            if (autoPunchTime && (autoPunchTime < startTime || autoPunchTime > endTime)) {
+              setFormError("O limite da batida automática precisa estar entre a entrada e a saída.");
+              return;
+            }
             setFormError(null);
             try {
               await onSave({
@@ -89,6 +95,7 @@ export function GroupScheduleDialog({
                 endTime,
                 breakStartTime,
                 breakEndTime,
+                autoPunchTime,
               });
             } catch (caught) {
               setFormError(
@@ -133,6 +140,13 @@ export function GroupScheduleDialog({
             type="time"
             value={endTime}
             onValueChange={setEndTime}
+          />
+          <TextField
+            id="group-schedule-auto-punch"
+            label="Limite para saída automática (opcional)"
+            type="time"
+            value={autoPunchTime}
+            onValueChange={setAutoPunchTime}
           />
           {formError ? <Notice tone="error">{formError}</Notice> : null}
           <DialogFooter>

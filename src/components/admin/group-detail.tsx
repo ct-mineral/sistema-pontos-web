@@ -180,6 +180,7 @@ export function GroupDetail() {
               : "Não informado"
           }
         />
+        <Fact label="Saída automática" value={group.autoPunchTime ?? "Não configurada"} />
         <Fact
           label="Carga diária"
           value={`${formatMinutes(group.dailyWorkloadMinutes)} por dia`}
@@ -312,6 +313,7 @@ export function GroupDetail() {
             endTime: group.endTime ?? "12:00",
             breakStartTime: group.breakStartTime ?? "",
             breakEndTime: group.breakEndTime ?? "",
+            autoPunchTime: group.autoPunchTime ?? "",
           }}
           busy={busy}
           submitLabel="Salvar"
@@ -326,6 +328,7 @@ export function GroupDetail() {
                 input.endTime,
                 input.breakStartTime,
                 input.breakEndTime,
+                input.autoPunchTime,
               );
               await reload();
               setEditing(false);

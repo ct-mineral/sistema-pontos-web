@@ -16,6 +16,7 @@ export type Group = {
   members: number;
   breakStartTime: string | null;
   breakEndTime: string | null;
+  autoPunchTime: string | null;
   people: GroupPerson[];
   createdAt: string;
   updatedAt: string;
@@ -183,6 +184,7 @@ export function createGroup(
   endTime: string,
   breakStartTime: string,
   breakEndTime: string,
+  autoPunchTime: string,
 ) {
   return postJson<Group>(
     "/api/groups/create",
@@ -192,6 +194,7 @@ export function createGroup(
       endTime,
       breakStartTime: breakStartTime || undefined,
       breakEndTime: breakEndTime || undefined,
+      autoPunchTime: autoPunchTime || undefined,
     },
     "Não foi possível cadastrar o grupo.",
   );
@@ -220,6 +223,7 @@ export function updateGroup(
   endTime: string,
   breakStartTime: string,
   breakEndTime: string,
+  autoPunchTime: string,
 ) {
   return postJson<Group>(
     "/api/groups/update",
@@ -230,6 +234,7 @@ export function updateGroup(
       endTime,
       breakStartTime: breakStartTime || undefined,
       breakEndTime: breakEndTime || undefined,
+      autoPunchTime: autoPunchTime || undefined,
     },
     "Não foi possível editar o grupo.",
   );
