@@ -44,8 +44,6 @@ import {
   formatDateTime,
   formatMinutes,
   peopleCountLabel,
-  scheduleRange,
-  shiftLabel,
 } from "@/lib/schedule";
 
 export function GroupDetail() {
@@ -112,8 +110,6 @@ export function GroupDetail() {
     );
   }
 
-  const shift = shiftLabel(group.startTime);
-
   async function changeStatus() {
     if (!group) return;
     setBusy(true);
@@ -138,7 +134,7 @@ export function GroupDetail() {
   return (
     <AdminPage
       title={group.name}
-      description="Horário, carga diária e pessoas vinculadas a este grupo."
+      description="Carga diária e pessoas vinculadas a este grupo."
       back={{ href: "/admin/grupos", label: "Grupos" }}
     >
       {manage ? (
@@ -169,23 +165,9 @@ export function GroupDetail() {
       {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Fact
-          label="Entrada e saída"
-          value={scheduleRange(group.startTime, group.endTime)}
-        />
-        <Fact
-          label="Intervalo"
-          value={
-            group.breakStartTime && group.breakEndTime
-              ? `${group.breakStartTime}–${group.breakEndTime}`
-              : "Não informado"
-          }
-        />
-        <Fact label="Saída automática" value={group.autoPunchTime ?? "Não configurada"} />
-        <Fact
           label="Carga diária"
           value={`${formatMinutes(group.dailyWorkloadMinutes)} por dia`}
         />
-        <Fact label="Turno" value={shift ?? "—"} />
         <Fact label="Status" value={<StatusBadge active={group.status} />} />
         <Fact label="Pessoas" value={peopleCountLabel(group.members)} />
         <Fact label="Cadastrado em" value={formatDateTime(group.createdAt)} />
@@ -306,14 +288,10 @@ export function GroupDetail() {
         <GroupScheduleDialog
           key={group.id}
           title="Editar grupo"
-          description="Altere o horário de trabalho e o intervalo deste grupo."
+            description="Altere a carga horária diária deste grupo."
           initial={{
             name: group.name,
-            startTime: group.startTime ?? "08:00",
-            endTime: group.endTime ?? "12:00",
-            breakStartTime: group.breakStartTime ?? "",
-            breakEndTime: group.breakEndTime ?? "",
-            autoPunchTime: group.autoPunchTime ?? "",
+            dailyWorkloadMinutes: group.dailyWorkloadMinutes,
           }}
           busy={busy}
           submitLabel="Salvar"
@@ -321,15 +299,7 @@ export function GroupDetail() {
           onSave={async (input) => {
             setBusy(true);
             try {
-              await updateGroup(
-                group.id,
-                input.name,
-                input.startTime,
-                input.endTime,
-                input.breakStartTime,
-                input.breakEndTime,
-                input.autoPunchTime,
-              );
+              await updateGroup(group.id, input.name, input.dailyWorkloadMinutes);
               await reload();
               setEditing(false);
               setNotice({ tone: "ok", text: "Grupo atualizado." });

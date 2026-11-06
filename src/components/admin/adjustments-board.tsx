@@ -40,7 +40,7 @@ import {
 } from "@/lib/admin-api";
 import { useCanManage } from "@/components/admin/panel-user";
 import { ApiError } from "@/lib/api";
-import { formatDay, formatSchedule, fortalezaToday } from "@/lib/schedule";
+import { formatDay, formatMinutes, fortalezaToday } from "@/lib/schedule";
 
 export function AdjustmentsBoard() {
   const manage = useCanManage();
@@ -59,7 +59,7 @@ export function AdjustmentsBoard() {
       listAdjustments(enrollment.trim() || undefined),
       listGroups(),
     ]);
-    setItems(next);
+    setItems(next || []);
     setGroups(groupList);
   }
 
@@ -87,8 +87,8 @@ export function AdjustmentsBoard() {
       title="Ajustes de carga"
       description={
         manage
-          ? "O horário vale para o grupo escolhido. A data final é opcional. Sem ela, o ajuste segue em aberto."
-          : "Horários especiais por matrícula. Esta conta só consulta os ajustes."
+            ? "A carga vale para o grupo escolhido. A data final é opcional. Sem ela, o ajuste segue em aberto."
+            : "Cargas especiais por matrícula. Esta conta só consulta os ajustes."
       }
     >
       <form
@@ -123,8 +123,6 @@ export function AdjustmentsBoard() {
               setNotice({ tone: "ok", text: "Ajuste cadastrado." });
             } catch (caught) {
               setNotice({ tone: "error", text: messageOf(caught, "Não foi possível cadastrar o ajuste.") });
-            } finally {
-              setBusy(false);
             }
           }}
         />
@@ -135,7 +133,7 @@ export function AdjustmentsBoard() {
           <TableRow>
             <TableHead>Matrícula</TableHead>
             <TableHead>Grupo</TableHead>
-            <TableHead>Horário</TableHead>
+          <TableHead>Carga diária</TableHead>
             <TableHead>Início</TableHead>
             <TableHead>Fim</TableHead>
             <TableHead>Situação</TableHead>
@@ -154,7 +152,7 @@ export function AdjustmentsBoard() {
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.suapEnrollment}</TableCell>
                   <TableCell>{item.groupName ?? "—"}</TableCell>
-                  <TableCell>{formatSchedule(item.startTime, item.endTime, item.dailyWorkloadMinutes)}</TableCell>
+                  <TableCell>{formatMinutes(item.dailyWorkloadMinutes)}</TableCell>
                   <TableCell>{formatDay(item.startDate)}</TableCell>
                   <TableCell>{item.endDate ? formatDay(item.endDate) : "—"}</TableCell>
                   <TableCell>
@@ -247,16 +245,14 @@ function EditAdjustmentDialog({
   onSave: (input: {
     suapEnrollment: string;
     groupId: string;
-    startTime: string;
-    endTime: string;
+    dailyWorkloadMinutes: number;
     startDate: string;
     endDate?: string;
   }) => Promise<void>;
 }) {
   const [enrollment, setEnrollment] = useState(item.suapEnrollment);
   const [groupId, setGroupId] = useState(item.groupId ?? "");
-  const [startTime, setStartTime] = useState(item.startTime ?? "08:00");
-  const [endTime, setEndTime] = useState(item.endTime ?? "12:00");
+  const [dailyWorkloadMinutes, setDailyWorkloadMinutes] = useState(String(item.dailyWorkloadMinutes));
   const [startDate, setStartDate] = useState(item.startDate.slice(0, 10));
   const [endDate, setEndDate] = useState(item.endDate?.slice(0, 10) ?? "");
   const [formError, setFormError] = useState<string | null>(null);
@@ -266,18 +262,15 @@ function EditAdjustmentDialog({
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Editar ajuste</DialogTitle>
-          <DialogDescription>Altere o horário, o grupo ou o período deste ajuste.</DialogDescription>
+          <DialogDescription>Altere a carga, o grupo ou o período deste ajuste.</DialogDescription>
         </DialogHeader>
         <form
           className="flex flex-col gap-3"
           onSubmit={(event) => {
             event.preventDefault();
-            if (!enrollment.trim() || !groupId || !startDate || !startTime || !endTime) {
-              setFormError("Informe a matrícula, o grupo, o horário e a data de início.");
-              return;
-            }
-            if (endTime <= startTime) {
-              setFormError("A saída precisa ser depois da entrada.");
+            const workload = Number(dailyWorkloadMinutes);
+            if (!enrollment.trim() || !groupId || !startDate || !Number.isInteger(workload) || workload <= 0) {
+              setFormError("Informe a matrícula, o grupo, uma carga válida e a data de início.");
               return;
             }
             if (endDate && endDate < startDate) {
@@ -290,8 +283,7 @@ function EditAdjustmentDialog({
                 await onSave({
                   suapEnrollment: enrollment.trim(),
                   groupId,
-                  startTime,
-                  endTime,
+                  dailyWorkloadMinutes: workload,
                   startDate,
                   ...(endDate ? { endDate } : {}),
                 });
@@ -322,8 +314,7 @@ function EditAdjustmentDialog({
             </Select>
           </Field>
           <div className="grid gap-3 sm:grid-cols-2">
-            <TextField id="edit-adjustment-start" label="Entrada" type="time" value={startTime} onValueChange={setStartTime} />
-            <TextField id="edit-adjustment-end" label="Saída" type="time" value={endTime} onValueChange={setEndTime} />
+            <TextField id="edit-adjustment-workload" label="Carga diária (minutos)" type="number" value={dailyWorkloadMinutes} onValueChange={setDailyWorkloadMinutes} />
             <TextField id="edit-adjustment-from" label="Início" type="date" value={startDate} onValueChange={setStartDate} />
             <TextField id="edit-adjustment-to" label="Fim" type="date" value={endDate} onValueChange={setEndDate} />
           </div>
@@ -352,16 +343,14 @@ function CreateAdjustmentForm({
   onSubmit: (input: {
     suapEnrollment: string;
     groupId: string;
-    startTime: string;
-    endTime: string;
+    dailyWorkloadMinutes: number;
     startDate: string;
     endDate?: string;
   }) => Promise<void>;
 }) {
   const [enrollment, setEnrollment] = useState("");
   const [groupId, setGroupId] = useState("");
-  const [startTime, setStartTime] = useState("08:00");
-  const [endTime, setEndTime] = useState("12:00");
+  const [dailyWorkloadMinutes, setDailyWorkloadMinutes] = useState("480");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -371,12 +360,9 @@ function CreateAdjustmentForm({
       className="flex flex-col gap-3"
       onSubmit={(event) => {
         event.preventDefault();
-        if (!enrollment.trim() || !groupId || !startDate || !startTime || !endTime) {
-          setFormError("Informe a matrícula, o grupo, o horário e a data de início.");
-          return;
-        }
-        if (endTime <= startTime) {
-          setFormError("A saída precisa ser depois da entrada.");
+        const workload = Number(dailyWorkloadMinutes);
+        if (!enrollment.trim() || !groupId || !startDate || !Number.isInteger(workload) || workload <= 0) {
+          setFormError("Informe a matrícula, o grupo, uma carga válida e a data de início.");
           return;
         }
         if (endDate && endDate < startDate) {
@@ -387,8 +373,7 @@ function CreateAdjustmentForm({
         void onSubmit({
           suapEnrollment: enrollment.trim(),
           groupId,
-          startTime,
-          endTime,
+          dailyWorkloadMinutes: workload,
           startDate,
           ...(endDate ? { endDate } : {}),
         }).then(() => {
@@ -420,8 +405,7 @@ function CreateAdjustmentForm({
             </SelectContent>
           </Select>
         </Field>
-        <TextField id="adjustment-start" label="Entrada" type="time" value={startTime} onValueChange={setStartTime} />
-        <TextField id="adjustment-end" label="Saída" type="time" value={endTime} onValueChange={setEndTime} />
+        <TextField id="adjustment-workload" label="Carga diária (minutos)" type="number" value={dailyWorkloadMinutes} onValueChange={setDailyWorkloadMinutes} />
         <TextField id="adjustment-from" label="Início" type="date" value={startDate} onValueChange={setStartDate} />
         <TextField id="adjustment-to" label="Fim" type="date" value={endDate} onValueChange={setEndDate} />
         <ActionButton type="submit" disabled={busy}>

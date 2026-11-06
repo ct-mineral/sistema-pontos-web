@@ -16,11 +16,7 @@ import { ApiError } from "@/lib/api";
 
 export type GroupScheduleInput = {
   name: string;
-  startTime: string;
-  endTime: string;
-  breakStartTime: string;
-  breakEndTime: string;
-  autoPunchTime: string;
+  dailyWorkloadMinutes: number;
 };
 
 export function GroupScheduleDialog({
@@ -41,11 +37,9 @@ export function GroupScheduleDialog({
   onSave: (input: GroupScheduleInput) => Promise<void>;
 }) {
   const [name, setName] = useState(initial.name);
-  const [startTime, setStartTime] = useState(initial.startTime);
-  const [endTime, setEndTime] = useState(initial.endTime);
-  const [breakStartTime, setBreakStartTime] = useState(initial.breakStartTime);
-  const [breakEndTime, setBreakEndTime] = useState(initial.breakEndTime);
-  const [autoPunchTime, setAutoPunchTime] = useState(initial.autoPunchTime);
+  const [dailyWorkloadMinutes, setDailyWorkloadMinutes] = useState(
+    String(initial.dailyWorkloadMinutes),
+  );
   const [formError, setFormError] = useState<string | null>(null);
 
   return (
@@ -59,43 +53,16 @@ export function GroupScheduleDialog({
           className="flex flex-col gap-3"
           onSubmit={async (event) => {
             event.preventDefault();
-            if (!name.trim() || !startTime || !endTime) {
-              setFormError("Informe o nome, a entrada e a saída.");
-              return;
-            }
-            if (endTime <= startTime) {
-              setFormError("A saída precisa ser depois da entrada.");
-              return;
-            }
-            if (Boolean(breakStartTime) !== Boolean(breakEndTime)) {
-              setFormError("Informe o início e o fim do intervalo.");
-              return;
-            }
-            if (
-              breakStartTime &&
-              breakEndTime &&
-              (breakStartTime <= startTime ||
-                breakEndTime >= endTime ||
-                breakEndTime <= breakStartTime)
-            ) {
-              setFormError(
-                "O intervalo precisa estar entre a entrada e a saída.",
-              );
-              return;
-            }
-            if (autoPunchTime && (autoPunchTime < startTime || autoPunchTime > endTime)) {
-              setFormError("O limite da batida automática precisa estar entre a entrada e a saída.");
+            const workload = Number(dailyWorkloadMinutes);
+            if (!name.trim() || !Number.isInteger(workload) || workload <= 0) {
+              setFormError("Informe o nome e uma carga horária diária válida.");
               return;
             }
             setFormError(null);
             try {
               await onSave({
                 name: name.trim(),
-                startTime,
-                endTime,
-                breakStartTime,
-                breakEndTime,
-                autoPunchTime,
+                dailyWorkloadMinutes: workload,
               });
             } catch (caught) {
               setFormError(
@@ -114,39 +81,11 @@ export function GroupScheduleDialog({
             placeholder="Informe o nome do grupo"
           />
           <TextField
-            id="group-schedule-start"
-            label="Entrada"
-            type="time"
-            value={startTime}
-            onValueChange={setStartTime}
-          />
-          <TextField
-            id="group-schedule-break-start"
-            label="Início do intervalo (opcional)"
-            type="time"
-            value={breakStartTime}
-            onValueChange={setBreakStartTime}
-          />
-          <TextField
-            id="group-schedule-break-end"
-            label="Fim do intervalo (opcional)"
-            type="time"
-            value={breakEndTime}
-            onValueChange={setBreakEndTime}
-          />
-          <TextField
-            id="group-schedule-end"
-            label="Saída"
-            type="time"
-            value={endTime}
-            onValueChange={setEndTime}
-          />
-          <TextField
-            id="group-schedule-auto-punch"
-            label="Limite para saída automática (opcional)"
-            type="time"
-            value={autoPunchTime}
-            onValueChange={setAutoPunchTime}
+            id="group-schedule-workload"
+            label="Carga diária (minutos)"
+            type="number"
+            value={dailyWorkloadMinutes}
+            onValueChange={setDailyWorkloadMinutes}
           />
           {formError ? <Notice tone="error">{formError}</Notice> : null}
           <DialogFooter>
