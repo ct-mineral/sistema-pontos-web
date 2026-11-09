@@ -133,7 +133,7 @@ export function JustificationsBoard() {
         </TableHeader>
         <TableBody>
           {loading ? (
-            <EmptyRow colSpan={8}>Carregando justificativas…</EmptyRow>
+            <EmptyRow colSpan={9}>Carregando justificativas…</EmptyRow>
           ) : rows.length === 0 ? (
             <EmptyRow colSpan={9}>
               Nenhuma justificativa de carga incompleta.

@@ -40,7 +40,7 @@ import {
 } from "@/lib/admin-api";
 import { useCanManage } from "@/components/admin/panel-user";
 import { ApiError } from "@/lib/api";
-import { formatDay, formatMinutes, fortalezaToday } from "@/lib/schedule";
+import { formatDay, formatMinutes, fortalezaToday, minutesToTime, timeToMinutes } from "@/lib/schedule";
 
 export function AdjustmentsBoard() {
   const manage = useCanManage();
@@ -252,7 +252,7 @@ function EditAdjustmentDialog({
 }) {
   const [enrollment, setEnrollment] = useState(item.suapEnrollment);
   const [groupId, setGroupId] = useState(item.groupId ?? "");
-  const [dailyWorkloadMinutes, setDailyWorkloadMinutes] = useState(String(item.dailyWorkloadMinutes));
+  const [dailyWorkload, setDailyWorkload] = useState(minutesToTime(item.dailyWorkloadMinutes));
   const [startDate, setStartDate] = useState(item.startDate.slice(0, 10));
   const [endDate, setEndDate] = useState(item.endDate?.slice(0, 10) ?? "");
   const [formError, setFormError] = useState<string | null>(null);
@@ -268,7 +268,7 @@ function EditAdjustmentDialog({
           className="flex flex-col gap-3"
           onSubmit={(event) => {
             event.preventDefault();
-            const workload = Number(dailyWorkloadMinutes);
+            const workload = timeToMinutes(dailyWorkload);
             if (!enrollment.trim() || !groupId || !startDate || !Number.isInteger(workload) || workload <= 0) {
               setFormError("Informe a matrícula, o grupo, uma carga válida e a data de início.");
               return;
@@ -314,7 +314,13 @@ function EditAdjustmentDialog({
             </Select>
           </Field>
           <div className="grid gap-3 sm:grid-cols-2">
-            <TextField id="edit-adjustment-workload" label="Carga diária (minutos)" type="number" value={dailyWorkloadMinutes} onValueChange={setDailyWorkloadMinutes} />
+            <TextField
+              id="edit-adjustment-workload"
+              label="Carga diária (horas)"
+              type="time"
+              value={dailyWorkload}
+              onValueChange={setDailyWorkload}
+            />
             <TextField id="edit-adjustment-from" label="Início" type="date" value={startDate} onValueChange={setStartDate} />
             <TextField id="edit-adjustment-to" label="Fim" type="date" value={endDate} onValueChange={setEndDate} />
           </div>
@@ -350,7 +356,7 @@ function CreateAdjustmentForm({
 }) {
   const [enrollment, setEnrollment] = useState("");
   const [groupId, setGroupId] = useState("");
-  const [dailyWorkloadMinutes, setDailyWorkloadMinutes] = useState("480");
+  const [dailyWorkload, setDailyWorkload] = useState("08:00");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
@@ -360,7 +366,7 @@ function CreateAdjustmentForm({
       className="flex flex-col gap-3"
       onSubmit={(event) => {
         event.preventDefault();
-        const workload = Number(dailyWorkloadMinutes);
+        const workload = timeToMinutes(dailyWorkload);
         if (!enrollment.trim() || !groupId || !startDate || !Number.isInteger(workload) || workload <= 0) {
           setFormError("Informe a matrícula, o grupo, uma carga válida e a data de início.");
           return;
@@ -405,7 +411,13 @@ function CreateAdjustmentForm({
             </SelectContent>
           </Select>
         </Field>
-        <TextField id="adjustment-workload" label="Carga diária (minutos)" type="number" value={dailyWorkloadMinutes} onValueChange={setDailyWorkloadMinutes} />
+        <TextField
+          id="adjustment-workload"
+          label="Carga diária (horas)"
+          type="time"
+          value={dailyWorkload}
+          onValueChange={setDailyWorkload}
+        />
         <TextField id="adjustment-from" label="Início" type="date" value={startDate} onValueChange={setStartDate} />
         <TextField id="adjustment-to" label="Fim" type="date" value={endDate} onValueChange={setEndDate} />
         <ActionButton type="submit" disabled={busy}>

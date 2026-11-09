@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ApiError } from "@/lib/api";
+import { minutesToTime, timeToMinutes } from "@/lib/schedule";
 
 export type GroupScheduleInput = {
   name: string;
@@ -37,8 +38,8 @@ export function GroupScheduleDialog({
   onSave: (input: GroupScheduleInput) => Promise<void>;
 }) {
   const [name, setName] = useState(initial.name);
-  const [dailyWorkloadMinutes, setDailyWorkloadMinutes] = useState(
-    String(initial.dailyWorkloadMinutes),
+  const [dailyWorkload, setDailyWorkload] = useState(
+    minutesToTime(initial.dailyWorkloadMinutes),
   );
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -53,7 +54,7 @@ export function GroupScheduleDialog({
           className="flex flex-col gap-3"
           onSubmit={async (event) => {
             event.preventDefault();
-            const workload = Number(dailyWorkloadMinutes);
+            const workload = timeToMinutes(dailyWorkload);
             if (!name.trim() || !Number.isInteger(workload) || workload <= 0) {
               setFormError("Informe o nome e uma carga horária diária válida.");
               return;
@@ -82,10 +83,10 @@ export function GroupScheduleDialog({
           />
           <TextField
             id="group-schedule-workload"
-            label="Carga diária (minutos)"
-            type="number"
-            value={dailyWorkloadMinutes}
-            onValueChange={setDailyWorkloadMinutes}
+            label="Carga diária (horas)"
+            type="time"
+            value={dailyWorkload}
+            onValueChange={setDailyWorkload}
           />
           {formError ? <Notice tone="error">{formError}</Notice> : null}
           <DialogFooter>

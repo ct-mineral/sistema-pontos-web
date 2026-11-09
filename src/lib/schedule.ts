@@ -86,3 +86,15 @@ export function peopleCountLabel(count: number) {
 export function scheduleRange(start: string | null, end: string | null) {
   return start && end ? `${start}–${end}` : "Horário não definido";
 }
+
+export function minutesToTime(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+}
+
+export function timeToMinutes(value: string) {
+  const match = /^(\d{1,2}):([0-5]\d)$/.exec(value);
+  if (!match) return Number.NaN;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
