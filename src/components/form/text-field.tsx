@@ -18,7 +18,7 @@ export function TextField({
   id: string;
   value: string;
   onValueChange: (value: string) => void;
-  type?: "text" | "time" | "date";
+  type?: "text" | "time" | "date" | "number";
   placeholder?: string;
   className?: string;
   required?: boolean;

@@ -10,12 +10,13 @@ export type Group = {
   id: string;
   name: string;
   dailyWorkloadMinutes: number;
-  startTime: string | null;
-  endTime: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
   status: boolean;
   members: number;
-  breakStartTime: string | null;
-  breakEndTime: string | null;
+  breakStartTime?: string | null;
+  breakEndTime?: string | null;
+  autoPunchTime?: string | null;
   people: GroupPerson[];
   createdAt: string;
   updatedAt: string;
@@ -34,8 +35,8 @@ export type WorkloadAdjustment = {
   groupId: string | null;
   groupName: string | null;
   dailyWorkloadMinutes: number;
-  startTime: string | null;
-  endTime: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
   startDate: string;
   endDate: string | null;
 };
@@ -179,14 +180,14 @@ export function listGroups() {
 
 export function createGroup(
   name: string,
-  startTime: string,
-  endTime: string,
-  breakStartTime: string,
-  breakEndTime: string,
+  dailyWorkloadMinutes: number,
 ) {
   return postJson<Group>(
     "/api/groups/create",
-    { name, startTime, endTime, breakStartTime: breakStartTime || undefined, breakEndTime: breakEndTime || undefined },
+    {
+      name,
+      dailyWorkloadMinutes,
+    },
     "Não foi possível cadastrar o grupo.",
   );
 }
@@ -210,14 +211,15 @@ export function unassignGroup(suapEnrollment: string, groupId: string) {
 export function updateGroup(
   id: string,
   name: string,
-  startTime: string,
-  endTime: string,
-  breakStartTime: string,
-  breakEndTime: string,
+  dailyWorkloadMinutes: number,
 ) {
   return postJson<Group>(
     "/api/groups/update",
-    { id, name, startTime, endTime, breakStartTime: breakStartTime || undefined, breakEndTime: breakEndTime || undefined },
+    {
+      id,
+      name,
+      dailyWorkloadMinutes,
+    },
     "Não foi possível editar o grupo.",
   );
 }
@@ -316,8 +318,7 @@ export function deleteAdjustment(id: string) {
 type AdjustmentInput = {
   suapEnrollment: string;
   groupId: string;
-  startTime: string;
-  endTime: string;
+  dailyWorkloadMinutes: number;
   startDate: string;
   endDate?: string;
 };

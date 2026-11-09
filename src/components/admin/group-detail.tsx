@@ -5,10 +5,21 @@ import { useParams, useRouter } from "next/navigation";
 import { ActivityReportDialog } from "@/components/admin/activity-report-dialog";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { GroupScheduleDialog } from "@/components/admin/group-schedule-dialog";
-import { AdminPage, EmptyRow, Notice, StatusBadge, Toolbar } from "@/components/admin/page-frame";
+import {
+  AdminPage,
+  EmptyRow,
+  Notice,
+  StatusBadge,
+  Toolbar,
+} from "@/components/admin/page-frame";
 import { ActionButton } from "@/components/form/action-button";
 import { TextField } from "@/components/form/text-field";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -29,7 +40,11 @@ import {
 } from "@/lib/admin-api";
 import { useCanManage } from "@/components/admin/panel-user";
 import { ApiError, ROLE_LABEL } from "@/lib/api";
-import { formatDateTime, formatMinutes, peopleCountLabel, scheduleRange, shiftLabel } from "@/lib/schedule";
+import {
+  formatDateTime,
+  formatMinutes,
+  peopleCountLabel,
+} from "@/lib/schedule";
 
 export function GroupDetail() {
   const params = useParams<{ id: string }>();
@@ -55,7 +70,11 @@ export function GroupDetail() {
         if (active) setGroups(rows);
       })
       .catch((caught: unknown) => {
-        if (active) setNotice({ tone: "error", text: messageOf(caught, "Não foi possível carregar o grupo.") });
+        if (active)
+          setNotice({
+            tone: "error",
+            text: messageOf(caught, "Não foi possível carregar o grupo."),
+          });
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -69,7 +88,11 @@ export function GroupDetail() {
 
   if (loading) {
     return (
-      <AdminPage title="Grupo" description="Carregando as informações do grupo." back={{ href: "/admin/grupos", label: "Grupos" }}>
+      <AdminPage
+        title="Grupo"
+        description="Carregando as informações do grupo."
+        back={{ href: "/admin/grupos", label: "Grupos" }}
+      >
         <p className="text-sm text-muted-foreground">Carregando grupo…</p>
       </AdminPage>
     );
@@ -87,8 +110,6 @@ export function GroupDetail() {
     );
   }
 
-  const shift = shiftLabel(group.startTime);
-
   async function changeStatus() {
     if (!group) return;
     setBusy(true);
@@ -96,9 +117,15 @@ export function GroupDetail() {
     try {
       await updateGroupStatus(group.id, !group.status);
       await reload();
-      setNotice({ tone: "ok", text: group.status ? "Grupo desativado." : "Grupo ativado." });
+      setNotice({
+        tone: "ok",
+        text: group.status ? "Grupo desativado." : "Grupo ativado.",
+      });
     } catch (caught) {
-      setNotice({ tone: "error", text: messageOf(caught, "Não foi possível atualizar o grupo.") });
+      setNotice({
+        tone: "error",
+        text: messageOf(caught, "Não foi possível atualizar o grupo."),
+      });
     } finally {
       setBusy(false);
     }
@@ -107,28 +134,40 @@ export function GroupDetail() {
   return (
     <AdminPage
       title={group.name}
-      description="Horário, carga diária e pessoas vinculadas a este grupo."
+      description="Carga diária e pessoas vinculadas a este grupo."
       back={{ href: "/admin/grupos", label: "Grupos" }}
     >
       {manage ? (
         <div className="flex flex-wrap gap-2">
-          <ActionButton intent="outline" disabled={busy} onClick={() => setEditing(true)}>
+          <ActionButton
+            intent="outline"
+            disabled={busy}
+            onClick={() => setEditing(true)}
+          >
             Editar
           </ActionButton>
-          <ActionButton intent={group.status ? "outline" : "primary"} disabled={busy} onClick={() => void changeStatus()}>
+          <ActionButton
+            intent={group.status ? "outline" : "primary"}
+            disabled={busy}
+            onClick={() => void changeStatus()}
+          >
             {group.status ? "Desativar" : "Ativar"}
           </ActionButton>
-          <ActionButton intent="danger" disabled={busy} onClick={() => setRemoving(true)}>
+          <ActionButton
+            intent="danger"
+            disabled={busy}
+            onClick={() => setRemoving(true)}
+          >
             Excluir
           </ActionButton>
         </div>
       ) : null}
       {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Fact label="Entrada e saída" value={scheduleRange(group.startTime, group.endTime)} />
-        <Fact label="Intervalo" value={group.breakStartTime && group.breakEndTime ? `${group.breakStartTime}–${group.breakEndTime}` : "Não informado"} />
-        <Fact label="Carga diária" value={`${formatMinutes(group.dailyWorkloadMinutes)} por dia`} />
-        <Fact label="Turno" value={shift ?? "—"} />
+        <Fact
+          label="Carga diária"
+          value={`${formatMinutes(group.dailyWorkloadMinutes)} por dia`}
+        />
         <Fact label="Status" value={<StatusBadge active={group.status} />} />
         <Fact label="Pessoas" value={peopleCountLabel(group.members)} />
         <Fact label="Cadastrado em" value={formatDateTime(group.createdAt)} />
@@ -138,7 +177,8 @@ export function GroupDetail() {
         <header className="space-y-1">
           <h2 className="text-lg font-semibold">Pessoas</h2>
           <p className="text-sm text-muted-foreground">
-            {peopleCountLabel(group.people.length)} neste grupo. Uma matrícula pode participar de vários grupos, um por turno.
+            {peopleCountLabel(group.people.length)} neste grupo. Uma matrícula
+            pode participar de vários grupos, um por turno.
           </p>
         </header>
         {manage ? (
@@ -151,9 +191,18 @@ export function GroupDetail() {
                 try {
                   await assignGroup(enrollment, group.id);
                   await reload();
-                  setNotice({ tone: "ok", text: "Usuário vinculado ao grupo." });
+                  setNotice({
+                    tone: "ok",
+                    text: "Usuário vinculado ao grupo.",
+                  });
                 } catch (caught) {
-                  setNotice({ tone: "error", text: messageOf(caught, "Não foi possível vincular a matrícula.") });
+                  setNotice({
+                    tone: "error",
+                    text: messageOf(
+                      caught,
+                      "Não foi possível vincular a matrícula.",
+                    ),
+                  });
                   throw caught;
                 } finally {
                   setBusy(false);
@@ -161,7 +210,9 @@ export function GroupDetail() {
               }}
             />
           ) : (
-            <p className="text-sm text-muted-foreground">Ative o grupo para vincular novas matrículas.</p>
+            <p className="text-sm text-muted-foreground">
+              Ative o grupo para vincular novas matrículas.
+            </p>
           )
         ) : null}
         <Table>
@@ -179,7 +230,9 @@ export function GroupDetail() {
             ) : (
               group.people.map((person) => (
                 <TableRow key={person.suapEnrollment}>
-                  <TableCell className="font-medium">{person.name?.trim() || "—"}</TableCell>
+                  <TableCell className="font-medium">
+                    {person.name?.trim() || "—"}
+                  </TableCell>
                   <TableCell>{person.suapEnrollment}</TableCell>
                   <TableCell>{roleLabel(person.role)}</TableCell>
                   <TableCell className="text-right">
@@ -203,10 +256,19 @@ export function GroupDetail() {
                             unassignGroup(person.suapEnrollment, group.id)
                               .then(async () => {
                                 await reload();
-                                setNotice({ tone: "ok", text: "Usuário removido do grupo." });
+                                setNotice({
+                                  tone: "ok",
+                                  text: "Usuário removido do grupo.",
+                                });
                               })
                               .catch((caught: unknown) => {
-                                setNotice({ tone: "error", text: messageOf(caught, "Não foi possível remover a matrícula do grupo.") });
+                                setNotice({
+                                  tone: "error",
+                                  text: messageOf(
+                                    caught,
+                                    "Não foi possível remover a matrícula do grupo.",
+                                  ),
+                                });
                               })
                               .finally(() => setBusy(false));
                           }}
@@ -226,13 +288,10 @@ export function GroupDetail() {
         <GroupScheduleDialog
           key={group.id}
           title="Editar grupo"
-          description="Altere o horário de trabalho e o intervalo deste grupo."
+            description="Altere a carga horária diária deste grupo."
           initial={{
             name: group.name,
-            startTime: group.startTime ?? "08:00",
-            endTime: group.endTime ?? "12:00",
-            breakStartTime: group.breakStartTime ?? "",
-            breakEndTime: group.breakEndTime ?? "",
+            dailyWorkloadMinutes: group.dailyWorkloadMinutes,
           }}
           busy={busy}
           submitLabel="Salvar"
@@ -240,7 +299,7 @@ export function GroupDetail() {
           onSave={async (input) => {
             setBusy(true);
             try {
-              await updateGroup(group.id, input.name, input.startTime, input.endTime, input.breakStartTime, input.breakEndTime);
+              await updateGroup(group.id, input.name, input.dailyWorkloadMinutes);
               await reload();
               setEditing(false);
               setNotice({ tone: "ok", text: "Grupo atualizado." });
@@ -273,7 +332,10 @@ export function GroupDetail() {
               router.push("/admin/grupos");
             })
             .catch((caught: unknown) => {
-              setNotice({ tone: "error", text: messageOf(caught, "Não foi possível excluir o grupo.") });
+              setNotice({
+                tone: "error",
+                text: messageOf(caught, "Não foi possível excluir o grupo."),
+              });
               setRemoving(false);
             })
             .finally(() => setBusy(false));

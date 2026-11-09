@@ -41,7 +41,16 @@ export function activityReportFileName(enrollment: string, month: string) {
 
 export function buildActivityReport(input: {
   person: GroupPerson;
-  group: Pick<Group, "id" | "name" | "startTime" | "endTime" | "breakStartTime" | "breakEndTime" | "dailyWorkloadMinutes">;
+  group: Pick<
+    Group,
+    | "id"
+    | "name"
+    | "startTime"
+    | "endTime"
+    | "breakStartTime"
+    | "breakEndTime"
+    | "dailyWorkloadMinutes"
+  >;
   period: PeriodSummary;
   issuedAt: string;
 }) {
@@ -83,7 +92,7 @@ export function buildActivityReport(input: {
     <tr><th>Matrícula</th><td>${escapeHtml(person.suapEnrollment)}</td></tr>
     <tr><th>Papel</th><td>${escapeHtml(role)}</td></tr>
     <tr><th>Grupo</th><td>${escapeHtml(group.name)}</td></tr>
-    <tr><th>Horário do grupo</th><td>${escapeHtml(scheduleRange(group.startTime, group.endTime))}</td></tr>
+    <tr><th>Horário do grupo</th><td>${escapeHtml(scheduleRange(group.startTime ?? null, group.endTime ?? null))}</td></tr>
     <tr><th>Intervalo</th><td>${escapeHtml(group.breakStartTime && group.breakEndTime ? `${group.breakStartTime}–${group.breakEndTime}` : "Não informado")}</td></tr>
     <tr><th>Carga diária</th><td>${escapeHtml(formatMinutes(group.dailyWorkloadMinutes))}</td></tr>
     <tr><th>Período</th><td>${escapeHtml(formatDay(period.from))} a ${escapeHtml(formatDay(period.to))}</td></tr>
@@ -144,7 +153,9 @@ function sumGroup(days: DaySummary[], groupId: string) {
 
 function dayRows(day: DaySummary, groupId: string) {
   const line = day.groups.find((group) => group.id === groupId) ?? null;
-  const intervals = (day.intervals ?? []).filter((interval) => interval.groupId === groupId);
+  const intervals = (day.intervals ?? []).filter(
+    (interval) => interval.groupId === groupId,
+  );
   const notes = notesOf(day, groupId);
   const date = `${formatDay(day.date)} · ${weekday(day.date)}`;
   const schedule = line ? scheduleRange(line.startTime, line.endTime) : "—";
@@ -185,7 +196,10 @@ function justificationText(item: DayJustification) {
     item.makeupDate && item.makeupStart && item.makeupEnd
       ? ` Acerto em ${formatDay(item.makeupDate)}, das ${item.makeupStart} às ${item.makeupEnd}.`
       : "";
-  const missing = item.missingMinutes != null ? ` Faltante: ${minutesLabel(item.missingMinutes)}.` : "";
+  const missing =
+    item.missingMinutes != null
+      ? ` Faltante: ${minutesLabel(item.missingMinutes)}.`
+      : "";
   return `Carga incompleta ${JUSTIFICATION_LABEL[item.status]} às ${formatTime(item.recordedAt)}, fim do turno ${item.scheduledEnd}.${missing} ${item.reason?.trim() || "Aguardando motivo."}${makeup}`;
 }
 

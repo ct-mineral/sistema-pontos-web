@@ -1,11 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  AdminPage,
-  Notice,
-  Toolbar,
-} from "@/components/admin/page-frame";
+import { AdminPage, Notice, Toolbar } from "@/components/admin/page-frame";
 import { ActionButton } from "@/components/form/action-button";
 import { TextField } from "@/components/form/text-field";
 import { buttonVariants } from "@/components/ui/button";
@@ -133,13 +129,35 @@ export function LookupBoard() {
         }}
       >
         <Toolbar>
-          <TextField id="lookup-enrollment" placeholder="Informe a matrícula" label="Matrícula" value={enrollment} onValueChange={setEnrollment} />
-          <TextField id="lookup-from" label="De" type="date" value={from} onValueChange={setFrom} />
-          <TextField id="lookup-to" label="Até" type="date" value={to} onValueChange={setTo} />
+          <TextField
+            id="lookup-enrollment"
+            placeholder="Informe a matrícula"
+            label="Matrícula"
+            value={enrollment}
+            onValueChange={setEnrollment}
+          />
+          <TextField
+            id="lookup-from"
+            label="De"
+            type="date"
+            value={from}
+            onValueChange={setFrom}
+          />
+          <TextField
+            id="lookup-to"
+            label="Até"
+            type="date"
+            value={to}
+            onValueChange={setTo}
+          />
           <ActionButton type="submit" disabled={loading}>
             Consultar hoje
           </ActionButton>
-          <ActionButton intent="outline" disabled={loading} onClick={() => void loadPeriod()}>
+          <ActionButton
+            intent="outline"
+            disabled={loading}
+            onClick={() => void loadPeriod()}
+          >
             Aplicar período
           </ActionButton>
         </Toolbar>
@@ -170,8 +188,12 @@ export function LookupBoard() {
             {days.flatMap((day) =>
               day.groups.length === 0 ? (
                 <TableRow key={day.date}>
-                  <TableCell className="font-medium">{formatDay(day.date)}</TableCell>
-                  <TableCell colSpan={5}>Nenhum grupo com horário neste dia.</TableCell>
+                  <TableCell className="font-medium">
+                    {formatDay(day.date)}
+                  </TableCell>
+                  <TableCell colSpan={5}>
+                    Nenhum grupo com horário neste dia.
+                  </TableCell>
                   <TableCell>
                     <DayNotes day={day} />
                   </TableCell>
@@ -186,12 +208,16 @@ export function LookupBoard() {
               ) : (
                 day.groups.map((group, index) => (
                   <TableRow key={`${day.date}-${group.id ?? group.name}`}>
-                    <TableCell className="font-medium">{formatDay(day.date)}</TableCell>
+                    <TableCell className="font-medium">
+                      {formatDay(day.date)}
+                    </TableCell>
                     <TableCell>{group.name}</TableCell>
                     <TableCell>{scheduleOf(group)}</TableCell>
                     <TableCell>{minutesLabel(group.workedMinutes)}</TableCell>
                     <TableCell>{minutesLabel(group.expectedMinutes)}</TableCell>
-                    <TableCell>{minutesLabel(group.remainingMinutes)}</TableCell>
+                    <TableCell>
+                      {minutesLabel(group.remainingMinutes)}
+                    </TableCell>
                     <TableCell>
                       {index === 0 ? <DayNotes day={day} /> : null}
                     </TableCell>
@@ -217,7 +243,11 @@ export function LookupBoard() {
 
 function GroupHoursCards({ groups }: { groups: GroupHours[] }) {
   if (groups.length === 0) {
-    return <p className="text-sm text-muted-foreground">Nenhum grupo com horário neste período.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        Nenhum grupo com horário neste período.
+      </p>
+    );
   }
 
   return (
@@ -230,9 +260,18 @@ function GroupHoursCards({ groups }: { groups: GroupHours[] }) {
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-3">
-              <Hours label="Trabalhado" value={minutesLabel(group.workedMinutes)} />
-              <Hours label="Previsto" value={minutesLabel(group.expectedMinutes)} />
-              <Hours label="Restante" value={minutesLabel(group.remainingMinutes)} />
+              <Hours
+                label="Trabalhado"
+                value={minutesLabel(group.workedMinutes)}
+              />
+              <Hours
+                label="Previsto"
+                value={minutesLabel(group.expectedMinutes)}
+              />
+              <Hours
+                label="Restante"
+                value={minutesLabel(group.remainingMinutes)}
+              />
             </div>
           </CardContent>
         </Card>
@@ -250,9 +289,12 @@ function Hours({ label, value }: { label: string; value: string }) {
   );
 }
 
-function scheduleOf(group: Pick<GroupHours, "startTime" | "endTime" | "scheduleVaries">) {
+function scheduleOf(
+  group: Pick<GroupHours, "startTime" | "endTime" | "scheduleVaries">,
+) {
   if (group.scheduleVaries) return "Horário varia no período";
-  if (group.startTime && group.endTime) return `${group.startTime}–${group.endTime}`;
+  if (group.startTime && group.endTime)
+    return `${group.startTime}–${group.endTime}`;
   return "Horário não definido";
 }
 
@@ -353,15 +395,19 @@ function JustificationMarks({ items }: { items: DayJustification[] }) {
         <li key={`${item.recordedAt}-${item.status}`} className="space-y-1">
           <JustificationBadge status={item.status} />
           <p className="text-xs text-muted-foreground">
-            Saída {formatTime(item.recordedAt)} · fim do turno {item.scheduledEnd}
-            {item.missingMinutes != null ? ` · faltante ${formatMinutes(item.missingMinutes)}` : ""}
+            Saída {formatTime(item.recordedAt)} · fim do turno{" "}
+            {item.scheduledEnd}
+            {item.missingMinutes != null
+              ? ` · faltante ${formatMinutes(item.missingMinutes)}`
+              : ""}
           </p>
           <p className="max-w-xs whitespace-pre-wrap text-sm">
             {item.reason?.trim() || "Aguardando motivo"}
           </p>
           {item.makeupDate && item.makeupStart && item.makeupEnd ? (
             <p className="text-sm">
-              Acerto em {formatDay(item.makeupDate)}, das {item.makeupStart} às {item.makeupEnd}
+              Acerto em {formatDay(item.makeupDate)}, das {item.makeupStart} às{" "}
+              {item.makeupEnd}
             </p>
           ) : null}
         </li>

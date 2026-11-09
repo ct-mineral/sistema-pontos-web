@@ -41,7 +41,10 @@ export function JustificationsBoard() {
   const [partial, setPartial] = useState<EarlyExitJustification | null>(null);
   const [makeupDate, setMakeupDate] = useState("");
   const [makeupStart, setMakeupStart] = useState("");
-  const [notice, setNotice] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
+  const [notice, setNotice] = useState<{
+    tone: "ok" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -53,7 +56,10 @@ export function JustificationsBoard() {
         if (!active) return;
         setNotice({
           tone: "error",
-          text: caught instanceof ApiError ? caught.message : "Não foi possível carregar as justificativas.",
+          text:
+            caught instanceof ApiError
+              ? caught.message
+              : "Não foi possível carregar as justificativas.",
         });
       })
       .finally(() => {
@@ -73,7 +79,9 @@ export function JustificationsBoard() {
     setNotice(null);
     try {
       const updated = await reviewJustification(id, status, makeup);
-      setItems((current) => current.map((item) => (item.id === id ? updated : item)));
+      setItems((current) =>
+        current.map((item) => (item.id === id ? updated : item)),
+      );
       setPartial(null);
       setNotice({
         tone: "ok",
@@ -87,7 +95,10 @@ export function JustificationsBoard() {
     } catch (caught) {
       setNotice({
         tone: "error",
-        text: caught instanceof ApiError ? caught.message : "Não foi possível analisar a justificativa.",
+        text:
+          caught instanceof ApiError
+            ? caught.message
+            : "Não foi possível analisar a justificativa.",
       });
     } finally {
       setBusyId(null);
@@ -122,13 +133,16 @@ export function JustificationsBoard() {
         </TableHeader>
         <TableBody>
           {loading ? (
-            <EmptyRow colSpan={8}>Carregando justificativas…</EmptyRow>
+            <EmptyRow colSpan={9}>Carregando justificativas…</EmptyRow>
           ) : rows.length === 0 ? (
-            <EmptyRow colSpan={9}>Nenhuma justificativa de carga incompleta.</EmptyRow>
+            <EmptyRow colSpan={9}>
+              Nenhuma justificativa de carga incompleta.
+            </EmptyRow>
           ) : (
             rows.map((item) => {
               const own = user?.id === item.userId;
-              const open = item.status === "PENDENTE" && Boolean(item.reason?.trim());
+              const open =
+                item.status === "PENDENTE" && Boolean(item.reason?.trim());
               return (
                 <TableRow key={item.id}>
                   <TableCell>{item.suapEnrollment}</TableCell>
@@ -136,7 +150,11 @@ export function JustificationsBoard() {
                   <TableCell>{item.groupName ?? "Sem grupo"}</TableCell>
                   <TableCell>{formatTime(item.recordedAt)}</TableCell>
                   <TableCell>{item.scheduledEnd}</TableCell>
-                  <TableCell>{item.missingMinutes != null ? formatMinutes(item.missingMinutes) : "—"}</TableCell>
+                  <TableCell>
+                    {item.missingMinutes != null
+                      ? formatMinutes(item.missingMinutes)
+                      : "—"}
+                  </TableCell>
                   <TableCell className="max-w-xs whitespace-pre-wrap">
                     {item.reason?.trim() || "Aguardando motivo"}
                   </TableCell>
@@ -182,15 +200,25 @@ export function JustificationsBoard() {
                         ) : null}
                       </div>
                     ) : open ? (
-                      <p className="text-sm text-muted-foreground">Aguardando análise</p>
-                    ) : item.status === "APROVADA_PARCIAL" && item.makeupDate && item.makeupStart && item.makeupEnd ? (
                       <p className="text-sm text-muted-foreground">
-                        Acerto em {formatDay(item.makeupDate)}, das {item.makeupStart} às {item.makeupEnd}
+                        Aguardando análise
+                      </p>
+                    ) : item.status === "APROVADA_PARCIAL" &&
+                      item.makeupDate &&
+                      item.makeupStart &&
+                      item.makeupEnd ? (
+                      <p className="text-sm text-muted-foreground">
+                        Acerto em {formatDay(item.makeupDate)}, das{" "}
+                        {item.makeupStart} às {item.makeupEnd}
                       </p>
                     ) : item.reviewerName ? (
-                      <p className="text-sm text-muted-foreground">{item.reviewerName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {item.reviewerName}
+                      </p>
                     ) : (
-                      <p className="text-sm text-muted-foreground">Aguardando motivo</p>
+                      <p className="text-sm text-muted-foreground">
+                        Aguardando motivo
+                      </p>
                     )}
                   </TableCell>
                 </TableRow>
@@ -199,13 +227,16 @@ export function JustificationsBoard() {
           )}
         </TableBody>
       </Table>
-      <Dialog open={partial !== null} onOpenChange={(open) => !open && setPartial(null)}>
+      <Dialog
+        open={partial !== null}
+        onOpenChange={(open) => !open && setPartial(null)}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Aprovar parcialmente</DialogTitle>
             <DialogDescription>
-              Informe o dia e o horário em que os minutos faltantes serão cumpridos. O fim é calculado
-              a partir da carga pendente.
+              Informe o dia e o horário em que os minutos faltantes serão
+              cumpridos. O fim é calculado a partir da carga pendente.
             </DialogDescription>
           </DialogHeader>
           <form
@@ -213,10 +244,20 @@ export function JustificationsBoard() {
             onSubmit={(event) => {
               event.preventDefault();
               if (!partial) return;
-              void decide(partial.id, "APROVADA_PARCIAL", { makeupDate, makeupStart });
+              void decide(partial.id, "APROVADA_PARCIAL", {
+                makeupDate,
+                makeupStart,
+              });
             }}
           >
-            <TextField id="makeup-date" label="Data" type="date" value={makeupDate} onValueChange={setMakeupDate} required />
+            <TextField
+              id="makeup-date"
+              label="Data"
+              type="date"
+              value={makeupDate}
+              onValueChange={setMakeupDate}
+              required
+            />
             <TextField
               id="makeup-start"
               label="Horário de início"
@@ -246,8 +287,18 @@ function rank(item: EarlyExitJustification) {
   return 2;
 }
 
-export function JustificationBadge({ status }: { status: JustificationStatus }) {
+export function JustificationBadge({
+  status,
+}: {
+  status: JustificationStatus;
+}) {
   const variant =
-    status === "RECUSADA" ? "destructive" : status === "APROVADA" ? "default" : status === "APROVADA_PARCIAL" ? "outline" : "secondary";
+    status === "RECUSADA"
+      ? "destructive"
+      : status === "APROVADA"
+        ? "default"
+        : status === "APROVADA_PARCIAL"
+          ? "outline"
+          : "secondary";
   return <Badge variant={variant}>{JUSTIFICATION_LABEL[status]}</Badge>;
 }
