@@ -123,6 +123,7 @@ export function JustificationsBoard() {
             <TableHead>Matrícula</TableHead>
             <TableHead>Nome</TableHead>
             <TableHead>Grupo</TableHead>
+            <TableHead>Dia</TableHead>
             <TableHead>Saída</TableHead>
             <TableHead>Fim do turno</TableHead>
             <TableHead>Faltante</TableHead>
@@ -133,9 +134,9 @@ export function JustificationsBoard() {
         </TableHeader>
         <TableBody>
           {loading ? (
-            <EmptyRow colSpan={9}>Carregando justificativas…</EmptyRow>
+            <EmptyRow colSpan={10}>Carregando justificativas…</EmptyRow>
           ) : rows.length === 0 ? (
-            <EmptyRow colSpan={9}>
+            <EmptyRow colSpan={10}>
               Nenhuma justificativa de carga incompleta.
             </EmptyRow>
           ) : (
@@ -148,6 +149,7 @@ export function JustificationsBoard() {
                   <TableCell>{item.suapEnrollment}</TableCell>
                   <TableCell>{item.name?.trim() || "Sem nome"}</TableCell>
                   <TableCell>{item.groupName ?? "Sem grupo"}</TableCell>
+                  <TableCell>{formatDay(item.makeupDate || "Sem data")}</TableCell>
                   <TableCell>{formatTime(item.recordedAt)}</TableCell>
                   <TableCell>{item.scheduledEnd}</TableCell>
                   <TableCell>
