@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ActivityReportDialog } from "@/components/admin/activity-report-dialog";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { GroupScheduleDialog } from "@/components/admin/group-schedule-dialog";
+import { AttendanceHistoryDialog } from "@/components/admin/attendance-history-dialog";
 import {
   AdminPage,
   EmptyRow,
@@ -45,6 +46,13 @@ import {
   formatMinutes,
   peopleCountLabel,
 } from "@/lib/schedule";
+import {
+  describeAttendance,
+  punchedCount,
+  useGroupAttendance,
+} from "@/components/admin/group-attendance";
+import { Badge } from "@/components/ui/badge";
+import { formatDay, fortalezaToday } from "@/lib/schedule";
 
 export function GroupDetail() {
   const params = useParams<{ id: string }>();
@@ -58,6 +66,7 @@ export function GroupDetail() {
   const [editing, setEditing] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [reportFor, setReportFor] = useState<GroupPerson | null>(null);
+  const [historyFor, setHistoryFor] = useState<GroupPerson | null>(null);
 
   async function reload() {
     setGroups(await listGroups());
@@ -85,6 +94,8 @@ export function GroupDetail() {
   }, []);
 
   const group = groups.find((item) => item.id === groupId) ?? null;
+  const [date, setDate] = useState(fortalezaToday());
+  const attendance = useGroupAttendance(group, date);
 
   if (loading) {
     return (
@@ -177,8 +188,11 @@ export function GroupDetail() {
         <header className="space-y-1">
           <h2 className="text-lg font-semibold">Pessoas</h2>
           <p className="text-sm text-muted-foreground">
-            {peopleCountLabel(group.people.length)} neste grupo. Uma matrícula
-            pode participar de vários grupos, um por turno.
+            {peopleCountLabel(group.people.length)} neste grupo.
+            {!attendance.loading && group.people.length > 0
+              ? ` ${punchedCount(group.people, attendance.byEnrollment)} bateram o ponto em ${formatDay(date)}.`
+              : ""}{" "}
+            Uma matrícula pode participar de vários grupos, um por turno.
           </p>
         </header>
         {manage ? (
@@ -215,18 +229,35 @@ export function GroupDetail() {
             </p>
           )
         ) : null}
+        <Toolbar>
+          <TextField
+            id="group-attendance-date"
+            label="Dia do ponto"
+            type="date"
+            value={date}
+            onValueChange={setDate}
+          />
+          <ActionButton
+            intent="outline"
+            disabled={attendance.loading}
+            onClick={attendance.reload}
+          >
+            Atualizar
+          </ActionButton>
+        </Toolbar>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Matrícula</TableHead>
               <TableHead>Papel</TableHead>
+              <TableHead>Situação</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {group.people.length === 0 ? (
-              <EmptyRow colSpan={4}>Nenhuma pessoa vinculada.</EmptyRow>
+              <EmptyRow colSpan={5}>Nenhuma pessoa vinculada.</EmptyRow>
             ) : (
               group.people.map((person) => (
                 <TableRow key={person.suapEnrollment}>
@@ -235,8 +266,24 @@ export function GroupDetail() {
                   </TableCell>
                   <TableCell>{person.suapEnrollment}</TableCell>
                   <TableCell>{roleLabel(person.role)}</TableCell>
+                  <TableCell>
+                    <AttendanceBadge
+                      loading={attendance.loading}
+                      view={describeAttendance(
+                        attendance.byEnrollment[person.suapEnrollment],
+                      )}
+                    />
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <ActionButton
+                        size="sm"
+                        intent="outline"
+                        disabled={attendance.loading}
+                        onClick={() => setHistoryFor(person)}
+                      >
+                        Pontos
+                      </ActionButton>
                       <ActionButton
                         size="sm"
                         intent="outline"
@@ -288,7 +335,7 @@ export function GroupDetail() {
         <GroupScheduleDialog
           key={group.id}
           title="Editar grupo"
-            description="Altere a carga horária diária deste grupo."
+          description="Altere a carga horária diária deste grupo."
           initial={{
             name: group.name,
             dailyWorkloadMinutes: group.dailyWorkloadMinutes,
@@ -299,7 +346,11 @@ export function GroupDetail() {
           onSave={async (input) => {
             setBusy(true);
             try {
-              await updateGroup(group.id, input.name, input.dailyWorkloadMinutes);
+              await updateGroup(
+                group.id,
+                input.name,
+                input.dailyWorkloadMinutes,
+              );
               await reload();
               setEditing(false);
               setNotice({ tone: "ok", text: "Grupo atualizado." });
@@ -315,6 +366,16 @@ export function GroupDetail() {
           group={group}
           onOpenChange={(open) => {
             if (!open) setReportFor(null);
+          }}
+        />
+      ) : null}
+      {historyFor ? (
+        <AttendanceHistoryDialog
+          person={historyFor}
+          date={date}
+          state={attendance.byEnrollment[historyFor.suapEnrollment]}
+          onOpenChange={(open) => {
+            if (!open) setHistoryFor(null);
           }}
         />
       ) : null}
@@ -401,6 +462,17 @@ function MembershipForm({
 
 function roleLabel(role: GroupPerson["role"]) {
   return role ? ROLE_LABEL[role] : "Aguardando acesso";
+}
+
+function AttendanceBadge({
+  loading,
+  view,
+}: {
+  loading: boolean;
+  view: ReturnType<typeof describeAttendance>;
+}) {
+  if (loading || !view) return null;
+  return <Badge variant={view.variant}>{view.label}</Badge>;
 }
 
 function messageOf(caught: unknown, fallback: string) {
