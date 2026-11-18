@@ -212,7 +212,6 @@ export function LookupBoard() {
                       {formatDay(day.date)}
                     </TableCell>
                     <TableCell>{group.name}</TableCell>
-                    <TableCell>{scheduleOf(group)}</TableCell>
                     <TableCell>{minutesLabel(group.workedMinutes)}</TableCell>
                     <TableCell>{minutesLabel(group.expectedMinutes)}</TableCell>
                     <TableCell>
@@ -256,7 +255,6 @@ function GroupHoursCards({ groups }: { groups: GroupHours[] }) {
         <Card key={group.id ?? group.name} size="sm">
           <CardHeader>
             <CardTitle>{group.name}</CardTitle>
-            <CardDescription>{scheduleOf(group)}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-3">
@@ -287,15 +285,6 @@ function Hours({ label, value }: { label: string; value: string }) {
       <p className="text-lg font-medium">{value}</p>
     </div>
   );
-}
-
-function scheduleOf(
-  group: Pick<GroupHours, "startTime" | "endTime" | "scheduleVaries">,
-) {
-  if (group.scheduleVaries) return "Horário varia no período";
-  if (group.startTime && group.endTime)
-    return `${group.startTime}–${group.endTime}`;
-  return "Horário não definido";
 }
 
 function DayDescriptions({
