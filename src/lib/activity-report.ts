@@ -16,7 +16,6 @@ import {
   formatMinutes,
   formatTime,
   minutesLabel,
-  scheduleRange,
 } from "@/lib/schedule";
 
 const MONTH = /^\d{4}-\d{2}$/;
@@ -92,7 +91,6 @@ export function buildActivityReport(input: {
     <tr><th>Matrícula</th><td>${escapeHtml(person.suapEnrollment)}</td></tr>
     <tr><th>Papel</th><td>${escapeHtml(role)}</td></tr>
     <tr><th>Grupo</th><td>${escapeHtml(group.name)}</td></tr>
-    <tr><th>Horário do grupo</th><td>${escapeHtml(scheduleRange(group.startTime ?? null, group.endTime ?? null))}</td></tr>
     <tr><th>Intervalo</th><td>${escapeHtml(group.breakStartTime && group.breakEndTime ? `${group.breakStartTime}–${group.breakEndTime}` : "Não informado")}</td></tr>
     <tr><th>Carga diária</th><td>${escapeHtml(formatMinutes(group.dailyWorkloadMinutes))}</td></tr>
     <tr><th>Período</th><td>${escapeHtml(formatDay(period.from))} a ${escapeHtml(formatDay(period.to))}</td></tr>
@@ -158,7 +156,6 @@ function dayRows(day: DaySummary, groupId: string) {
   );
   const notes = notesOf(day, groupId);
   const date = `${formatDay(day.date)} · ${weekday(day.date)}`;
-  const schedule = line ? scheduleRange(line.startTime, line.endTime) : "—";
   const load = line
     ? `${minutesLabel(line.workedMinutes)} trabalhados · ${minutesLabel(line.expectedMinutes)} previstos`
     : "—";
@@ -168,7 +165,6 @@ function dayRows(day: DaySummary, groupId: string) {
     const first = index === 0;
     return `<tr>
         <td>${escapeHtml(first ? date : "")}</td>
-        <td>${escapeHtml(first ? schedule : "")}</td>
         <td>${escapeHtml(interval ? clock(interval.entryAt) : "—")}</td>
         <td>${escapeHtml(interval ? exitLabel(interval) : "—")}</td>
         <td>${escapeHtml(interval ? activityText(interval.description) : "Sem registro de ponto")}</td>

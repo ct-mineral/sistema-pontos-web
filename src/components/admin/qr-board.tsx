@@ -136,7 +136,7 @@ export function QrBoard() {
     return (
       <AdminPage
         title="QR codes"
-        description="O código libera a batida de ponto. Esta conta não consulta nem baixa QR codes."
+        description="O código libera o registro de ponto. Esta conta não consulta nem baixa QR codes."
       >
         <p className="text-sm text-muted-foreground">Peça a um servidor para cuidar dos QR codes.</p>
       </AdminPage>
@@ -146,7 +146,7 @@ export function QrBoard() {
   return (
     <AdminPage
       title="QR codes"
-      description="Informe o local. O código usado na batida é gerado automaticamente."
+      description="Informe o local. O código usado no registro é gerado automaticamente."
     >
       <form
         onSubmit={(event) => {
@@ -160,7 +160,7 @@ export function QrBoard() {
             label="Local"
             value={location}
             onValueChange={setLocation}
-            placeholder="Informe o local que do QR Code"
+            placeholder="Informe o local do QR Code"
             className="w-2xs"
           />
           <ActionButton type="submit" disabled={busy}>

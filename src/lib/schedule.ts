@@ -83,10 +83,6 @@ export function peopleCountLabel(count: number) {
   return `${count} pessoas`;
 }
 
-export function scheduleRange(start: string | null, end: string | null) {
-  return start && end ? `${start}–${end}` : "Horário não definido";
-}
-
 export function minutesToTime(minutes: number) {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
